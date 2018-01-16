@@ -25,7 +25,7 @@
         transform: rotateX(20deg);
         margin-top: -50%;
         background-color: rgba(255, 255, 255, 0.5);
-        font-size: 70pt;
+        font-size: 100pt;
 
 
         display: inline-grid;
@@ -50,28 +50,46 @@ window.addEventListener("load", () => {
 
     let player = 0
 
-    const gameState = [
+    window.gameState = [
         [[null, null, null], [null, null, null], [null, null, null]],
         [[null, null, null], [null, null, null], [null, null, null]],
         [[null, null, null], [null, null, null], [null, null, null]]
     ]
 
+    let clickTimeout = false
+
     const handleClick = e => {
 
-        const {boardIndex, tileX, tileY} = e.target.dataset
+        // Avoid accidental double click activation
+        if (clickTimeout) {
+            return
+        }
+
+
+        let {boardIndex, tileX, tileY} = e.target.dataset
 
         if (gameState[boardIndex][tileY][tileX] != null) return
 
+        while (boardIndex>0 && gameState[boardIndex-1][tileY][tileX] == null) {
+            boardIndex--
+        }
+
         gameState[boardIndex][tileY][tileX] = player
-        e.target.innerHTML = player ? "O" : "X"
+
+        const tile = boards[boardIndex].children[parseInt(tileY)*3 + parseInt(tileX)]
+        tile.innerHTML = "•"
+        tile.style.color = player ? "red" : "blue"
 
         if (checkGameStatus(boardIndex, tileY, tileX, player)) {
             player = ++player%2
-            playerNum.innerHTML = player ? "O" : "X"
+            playerNum.innerHTML = "•"
+            playerNum.style.color = player ? "red" : "blue"
         } else {
-            playerNum.innerHTML = (player ? "O" : "X") + " wins"
-
+            playerNum.innerHTML = "• wins"
         }
+
+        clickTimeout = true
+        setTimeout(() => clickTimeout = false, 250)
     }
 
     // Check axes of last placed item
@@ -81,8 +99,11 @@ window.addEventListener("load", () => {
         const max = gameState[0].length-1
         const mid = Math.floor(max/2)
 
+        boardIndex = parseInt(boardIndex)
         tileY = parseInt(tileY)
         tileX = parseInt(tileX)
+
+        console.log("boardIndex", boardIndex, "tileY", tileY, "tileX", tileX, "player", player)
 
         // Check current board
         match = gameState[boardIndex][tileY].every(col => col==player) // Horizontal
@@ -174,7 +195,6 @@ window.addEventListener("load", () => {
     })
 
     window.addEventListener("keyup", () => rotating = false)
-
 })
 
 </script>
