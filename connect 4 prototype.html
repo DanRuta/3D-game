@@ -103,8 +103,6 @@ window.addEventListener("load", () => {
         tileY = parseInt(tileY)
         tileX = parseInt(tileX)
 
-        console.log("boardIndex", boardIndex, "tileY", tileY, "tileX", tileX, "player", player)
-
         // Check current board
         match = gameState[boardIndex][tileY].every(col => col==player) // Horizontal
             ||  gameState[boardIndex].every(row => row[tileX]==player) // Vertical
@@ -200,7 +198,7 @@ window.addEventListener("load", () => {
 </script>
 <body>
 
-Player: <span id="playerNum">X</span><br><br>
+Player: <span id="playerNum" style="color:blue">•</span><br><br>
 
 <div id="content">
     <div id="boardsContainer">
