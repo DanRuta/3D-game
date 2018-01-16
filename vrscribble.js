@@ -80,25 +80,6 @@ const userArea = (request, response) => {
     }), contentType: "text/html"})
 }
 
-const vrViewer = (request, response) => {
-
-    const [reqUsername, imageIndex] = request.url.split("/users/")[1].split("/")
-    let userId, imageBase64
-
-    for (const userIndex in usersData) {
-        if (usersData[userIndex].username.toLowerCase().replace(/\s/g, "-")==reqUsername) {
-            userId = userIndex
-            break
-        }
-    }
-
-    try {
-        imageBase64 = new Buffer(fs.readFileSync(`./screenshots/${userId}/`+imageIndex+".jpg")).toString("base64")
-        sendData({request, response, code: 200, data: pug.renderFile("./vrViewer.pug", {imageBase64}), contentType: "text/html"})
-
-    } catch(e) {sendData({request, response})}
-}
-
 
 
 // POST
@@ -131,11 +112,6 @@ const createEditRoom = (request, response, {roomName}) => {
     } while (rooms.includes(responseData))
 
     sendData({request, response, code: 200, data: JSON.stringify({roomName: responseData}), contentType: "text/plain"})
-}
-
-const getEditScribble = (request, response, {userId, scribbleId}) => {
-    const imageBase64 = new Buffer(fs.readFileSync(`./screenshots/${userId}/${scribbleId}.jpg`)).toString("base64")
-    sendData({request, response, code: 200, data: JSON.stringify({imageBase64}), contentType: "text/plain"})
 }
 
 const tokenSignin = (request, response, {authenticator, token, roomName}) => {
@@ -249,76 +225,6 @@ const changeUsername = (request, response, {newName, token, authenticator}) => {
     })
 }
 
-const saveScreenshot = (request, response, {username, base64Screenshot, authenticator, token}) => {
-
-    authenticateUser(token, authenticator, ({id}) => {
-
-        let userIndexValue, screenshotCount
-
-        for (let userIndex in usersData) {
-
-            if (usersData[userIndex].authUserID==id) {
-                userIndexValue = userIndex
-                screenshotCount = usersData[userIndex].screenshotsTaken
-            }
-        }
-
-        if (userIndexValue) {
-
-            const imageBuffer = new Buffer(base64Screenshot, "base64")
-            const imagePath = `./screenshots/${userIndexValue}/${screenshotCount}.jpg`
-
-            try {
-                fs.mkdirSync(`./screenshots/${userIndexValue}`)
-            }catch(e) {
-                // console.log(`Directory ./screenshots/${userIndexValue} already exists... Continuing...`)
-            }finally{
-                fs.writeFileSync(imagePath, imageBuffer)
-                console.log("Screenshot saved successfully")
-
-                // Add meta data from the Facebook template
-                exec(`exiftool -TagsFromFile ${FBtemplate} ${imagePath}`, (error, stdout, stderr) => {
-                    if (error)   console.log(error)
-                    if (stdout)  console.log(stdout)
-                    if (stderr)  console.log(stderr)
-                    console.log("Added the metadata")
-
-                    fs.unlink(imagePath+"_original")
-                })
-            }
-
-            sendData({request, response})
-
-            usersData[userIndexValue].screenshotsTaken++
-            fs.writeFile("./usersData.json", JSON.stringify(usersData, null, 4),()=>{})
-        }
-    })
-}
-
-const deleteScreenshot = (request, response, {path, token, authenticator}) => {
-
-    const pageUsername = path.split("/")[1]
-
-    authenticateUser(token, authenticator, ({id}) => {
-
-        let error = "Something went wrong..."
-
-        for (let userId in usersData) {
-
-            if (usersData[userId].authUserID==id && userId==pageUsername) {
-                error = null
-                fs.mkdir(`./private/vrscribble/deletedScreenshots/${userId}`, err => {
-                    fs.rename(`./${path}`, `./private/vrscribble/deletedScreenshots/${userId}/${path.split("/")[2]}`, err => {
-                        console.log(`Deleted screenshot ${path} from user area`)
-                    })
-                })
-                break
-            }
-        }
-
-        sendData({request, response, code:200, data: JSON.stringify({error})})
-    })
-}
 
 
 const handleWebSocket = (connection, clients) => {
@@ -425,18 +331,14 @@ exports.initProject = ({sendDataCallback, error, r, rPub, rSub}) => {
             [/$/] : index,
             [/viewer$/] : viewer,
             [/controller$/] : controller,
-            [/users\/[^\/]+$/] : userArea,
-            [/users\/[^\/]+\/[0-9]+/]: vrViewer
+            [/users\/[^\/]+$/] : userArea
         },
         post: {
             [/roomExists/] : roomExists,
             [/createRoom/] : createRoom,
             [/createEditRoom/] : createEditRoom,
-            [/getEditScribble/] : getEditScribble,
             [/tokenSignin/] : tokenSignin,
-            [/changeUsername/] : changeUsername,
-            [/vrscreenshot/] : saveScreenshot,
-            [/deleteScreenshot/] : deleteScreenshot
+            [/changeUsername/] : changeUsername
         },
         ws: handleWebSocket
     }
