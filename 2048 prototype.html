@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>game</title>
+</head>
+<style>
+    body {
+        background-color: #DDD;
+        font-family: Helvetica;
+        font-size: 40pt;
+    }
+    #content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    #boardsContainer {
+        display: flex;
+        flex-direction: column-reverse;
+        perspective: 1000px;
+        perspective-origin: 150px 1000px;
+        margin-top: 200px;
+    }
+    .board {
+        transform: rotateX(20deg);
+        margin-top: -50%;
+        background-color: rgba(255, 255, 255, 0.5);
+        font-size: 100pt;
+
+
+        display: inline-grid;
+        grid-template-columns: 100px 100px 100px;
+        grid-template-rows: 100px 100px 100px;
+        height: 300px;
+        width: 300px;
+        border: 1px solid black;
+    }
+    .board > div {
+        height: 100px;
+        width: 100px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid black;
+    }
+</style>
+<script>
+"use strict"
+window.addEventListener("load", () => {
+
+    let player = 0
+    const players = 2
+    const span = 3
+
+    const playerColours = ["blue", "red", "green", "purple", "yellow", "brown", "black", "cyan", "pink", "darkgrey"]
+
+    window.gameState = [
+        [[null, null, null], [null, null, null], [null, null, null]],
+        [[null, null, null], [null, null, null], [null, null, null]],
+        [[null, null, null], [null, null, null], [null, null, null]]
+    ]
+
+    let clickTimeout = false
+
+    const handleClick = e => {
+
+        // Avoid accidental double click activation
+        if (clickTimeout) {
+            return
+        }
+
+        let {boardIndex, tileX, tileY} = e.target.dataset
+
+        if (gameState[boardIndex][tileY][tileX] != null) return
+
+        while (boardIndex>0 && gameState[boardIndex-1][tileY][tileX] == null) {
+            boardIndex--
+        }
+
+        gameState[boardIndex][tileY][tileX] = player
+
+        const tile = boards[boardIndex].children[parseInt(tileY)*3 + parseInt(tileX)]
+        tile.innerHTML = "•"
+        tile.style.color = playerColours[player]
+
+        if (checkGameStatus(boardIndex, tileY, tileX, player)) {
+            player = ++player%players
+            playerNum.innerHTML = "•"
+            playerNum.style.color = playerColours[player]
+        } else {
+            playerNum.innerHTML = "• wins"
+        }
+
+        clickTimeout = true
+        setTimeout(() => clickTimeout = false, 250)
+    }
+
+    // Check axes of last placed item
+    const checkGameStatus = (boardIndex, tileY, tileX, player) => {
+
+        let match = false
+        const max = gameState[0].length-1
+        const mid = Math.floor(max/2)
+
+        boardIndex = parseInt(boardIndex)
+        tileY = parseInt(tileY)
+        tileX = parseInt(tileX)
+
+
+        // Check current board
+        match = gameState[boardIndex][tileY].every(col => col==player) // Horizontal
+            ||  gameState[boardIndex].every(row => row[tileX]==player) // Vertical
+            ||  ((tileX + tileY)%2 == 0 && ( // is it on a diagonal?
+                    // Diagonal top-left -> bottom-right
+                    gameState[boardIndex].every((row, ri) => row[ri]==player) ||
+                    // Diagonal bottom-left -> top-right
+                    gameState[boardIndex].every((row, ri) => row[max-ri]==player)
+                ))
+
+        // Check other boards
+        // up/down
+        match = match || gameState.every(board => board[tileY][tileX] == player)
+
+        if (match) return false
+
+        // 3D diagonals
+        // Not in location unreachable by a diagonal
+        if (boardIndex != mid || (boardIndex==mid && (tileY==mid || tileX==mid))) {
+
+            match = match
+                ||  gameState.every((board, bi) => board[max-bi][tileX]==player) // near-bottom -> far-top
+                ||  gameState.every((board, bi) => board[bi][tileX]==player) // far-bottom -> near-top
+                ||  gameState.every((board, bi) => board[tileY][max-bi]==player) // bottom-left -> top-right
+                ||  gameState.every((board, bi) => board[tileY][bi]==player) // bottom-right -> top-left
+
+            if (match) return false
+
+            // Check cross diagonal (going from corners through the middle)
+            if (gameState[mid][mid][mid]==player) {
+
+                match = match
+                    ||  gameState.every((board, bi) => board[bi][bi]==player) // far-bottom-left -> near-top-right
+                    ||  gameState.every((board, bi) => board[max-bi][bi]==player) // near-bottom-left -> far-top-right
+                    ||  gameState.every((board, bi) => board[max-bi][max-bi]==player) // near-bottom-right -> far-top-left
+                    ||  gameState.every((board, bi) => board[bi][max-bi]==player) // far-bottom-right -> near-top-left
+            }
+        }
+
+
+        return !match
+    }
+
+    // Check the game status for all placed items (when the gravity is changed, and every item is potentially re-arranged)
+    // TODO, optimize this, as this is insanely inefficient
+    const checkAll = () => {
+
+        let match = false
+
+        checks:
+        for (let b=0; b<span; b++) {
+            for (let r=0; r<span; r++) {
+                for (let c=0; c<span; c++) {
+
+                    if (gameState[b][r][c] != null) {
+                        match = match || !checkGameStatus(b, r, c, gameState[b][r][c])
+                        if (match) {
+                            player = gameState[b][r][c]
+                            break checks
+                        }
+                    }
+                }
+            }
+        }
+
+
+        if (match) {
+            playerNum.style.color = playerColours[player]
+            playerNum.innerHTML = "• wins"
+        } else {
+            player = ++player%players
+            playerNum.innerHTML = "•"
+            playerNum.style.color = playerColours[player]
+        }
+    }
+
+    // After gravity change
+    const reDrawBoard = () => {
+
+        // For every board
+        for (let b=0; b<span; b++) {
+            // For every row
+            for (let r=0; r<span; r++) {
+                // For every column
+                for (let c=0; c<span; c++) {
+
+                    if (gameState[b][r][c] != null) {
+
+                        boards[b].children[r*span + c].innerHTML = "•"
+                        boards[b].children[r*span + c].style.color = playerColours[gameState[b][r][c]]
+                    } else {
+                        boards[b].children[r*span + c].innerHTML = ""
+                    }
+
+                }
+            }
+        }
+    }
+
+
+
+    const boards = Array.from(document.querySelectorAll(".board"))
+    boards.forEach((board, bi) => {
+        const tiles = Array.from(board.querySelectorAll("div"))
+
+        tiles.forEach((tile, ti) => {
+            tile.dataset.boardIndex = bi
+            tile.dataset.tileX = ti%3
+            tile.dataset.tileY = parseInt(ti/3)
+
+            tile.addEventListener("click", handleClick)
+        })
+    })
+
+
+    let rotating = false
+    let direction = -1
+    let rotationValue = 0
+
+    const rotate = () => {
+
+        boards.forEach(board => {
+            rotationValue += direction
+            board.style.transform = `rotateX(20deg) rotateZ(${rotationValue}deg)`
+        })
+
+        if (rotating) {
+            setTimeout(rotate, 10)
+        }
+    }
+
+
+    window.addEventListener("keydown", (e) => {
+
+        if (e.code=="ArrowLeft") {
+            rotating = true
+            direction = -1
+            rotate()
+        } else if (e.code=="ArrowRight") {
+            rotating = true
+            direction = 1
+            rotate()
+        }
+    })
+
+    window.addEventListener("keyup", () => rotating = false)
+
+    const directions = {
+        up: 0,
+        down: 0,
+        left: 1,
+        right: 1,
+        forward: 2,
+        backward: 2
+    }
+    const modifier = {
+        up: 1,
+        down: -1,
+        left: -1,
+        right: 1,
+        forward: -1,
+        backward: 1
+    }
+
+    gravityButtons.querySelectorAll("button").forEach(button => {
+        button.addEventListener("click", () => {
+
+            const direction = button.id.replace("Button", "")
+            const max = Math.abs((modifier[direction]==-1 ? span-1 : 0)-(span-1))
+
+            switch (directions[direction]) {
+
+                // up/down (boards)
+                case 0:
+                    // For every row
+                    for (let r=0; r<span; r++) {
+                        // For every column
+                        for (let c=0; c<span; c++) {
+
+                            let i2 = 0
+
+                            everyBoard:
+                            for (let i=0; i<span; i++) {
+
+                                if (gameState[Math.abs(max-i)][r][c]==null) {
+
+                                    i2 = i+1
+
+                                    while (i2<span) {
+                                        if (i2<span && i<span && gameState[Math.abs(max-i2)][r][c] != null) {
+                                            gameState[Math.abs(max-i)][r][c] = gameState[Math.abs(max-i2)][r][c]
+                                            gameState[Math.abs(max-i2)][r][c] = null
+
+                                            i += i2
+                                        }
+
+                                        i2++
+                                    }
+                                    break everyBoard
+                                }
+                            }
+                        }
+                    }
+                    break
+
+                // left/right (columns)
+                case 1:
+
+                    // For every board
+                    for (let b=0; b<span; b++) {
+                        // For every row
+                        for (let r=0; r<span; r++) {
+
+                            let i2 = 0
+
+                            everyColumn:
+                            for (let i=0; i<span; i++) {
+
+                                if (gameState[b][r][Math.abs(max-i)]==null) {
+
+                                    i2 = i+1
+
+                                    while (i2<span) {
+                                        if (i2<span && i<span && gameState[b][r][Math.abs(max-i2)]!=null) {
+                                            gameState[b][r][Math.abs(max-i)] = gameState[b][r][Math.abs(max-i2)]
+                                            gameState[b][r][Math.abs(max-i2)] = null
+
+                                            i += i2
+                                        }
+
+                                        i2++
+                                    }
+                                    break everyColumn
+                                }
+
+                            }
+
+                        }
+                    }
+                    break
+
+                // forward/backward (rows)
+                case 2:
+
+                    // For every board
+                    for (let b=0; b<span; b++) {
+                        // For every row
+                        for (let r=0; r<span; r++) {
+
+                            let i2 = 0
+
+                            everyColumn:
+                            for (let i=0; i<span; i++) {
+
+                                if (gameState[b][Math.abs(max-i)][r]==null) {
+
+                                    i2 = i+1
+
+                                    while (i2<span) {
+                                        if (i2<span && i<span && gameState[b][Math.abs(max-i2)][r]!=null) {
+                                            gameState[b][Math.abs(max-i)][r] = gameState[b][Math.abs(max-i2)][r]
+                                            gameState[b][Math.abs(max-i2)][r] = null
+
+                                            i += i2
+                                        }
+
+                                        i2++
+                                    }
+                                    break everyColumn
+                                }
+                            }
+                        }
+                    }
+
+                    break
+            }
+
+            reDrawBoard()
+            checkAll()
+
+            console.log(gameState)
+        })
+    })
+})
+
+</script>
+<body>
+
+Player: <span id="playerNum" style="color:blue">•</span><br><br>
+
+<div id="content">
+    <div id="boardsContainer">
+        <div class="board">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="board">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="board">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+</div>
+
+
+<div id="gravityButtons">
+    <button id="leftButton">Left</button>
+    <button id="rightButton">Right</button>
+    <button id="upButton">Up</button>
+    <button id="downButton">Down</button>
+    <button id="forwardButton">Forward</button>
+    <button id="backwardButton">Backward</button>
+</div>
+
+</body>
+</html>
