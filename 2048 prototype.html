@@ -14,6 +14,11 @@
         justify-content: center;
         align-items: center;
     }
+    #options {
+        /*margin-top: 100px;*/
+        position: absolute;
+        font-size: 12pt;
+    }
     #boardsContainer {
         display: flex;
         flex-direction: column-reverse;
@@ -26,8 +31,6 @@
         margin-top: -50%;
         background-color: rgba(255, 255, 255, 0.5);
         font-size: 100pt;
-
-
         display: inline-grid;
         grid-template-columns: 100px 100px 100px;
         grid-template-rows: 100px 100px 100px;
@@ -35,9 +38,19 @@
         width: 300px;
         border: 1px solid black;
     }
+    .board::before {
+        content: "top";
+        font-size: 12pt;
+        position: absolute;
+        margin-top: -20px;
+    }
+    .board::after {
+        content: "bottom";
+        font-size: 12pt;
+    }
     .board > div {
-        height: 100px;
-        width: 100px;
+        /*height: 100px;*/
+        /*width: 100px;*/
         display: flex;
         justify-content: center;
         align-items: center;
@@ -48,19 +61,25 @@
 "use strict"
 window.addEventListener("load", () => {
 
-    let player = 0
-    const players = 2
-    const span = 3
+    window.gameState = []
 
     const playerColours = ["blue", "red", "green", "purple", "yellow", "brown", "black", "cyan", "pink", "darkgrey"]
 
-    window.gameState = [
-        [[null, null, null], [null, null, null], [null, null, null]],
-        [[null, null, null], [null, null, null], [null, null, null]],
-        [[null, null, null], [null, null, null], [null, null, null]]
-    ]
-
+    let span = 5
+    let player = 0
+    let players = 3
+    let boards = []
+    let rotating = false
+    let rotationDirection = -1
+    let rotationValue = 0
+    let tiltValue
     let clickTimeout = false
+    let gravityEnabled = true
+
+    const gravity = {
+        axis: 0, // 0 for up/down, 1 for left/right, 2 for  forward/backward
+        modifier: -1 // -1 for normal, 1 for reverse
+    }
 
     const handleClick = e => {
 
@@ -71,15 +90,18 @@ window.addEventListener("load", () => {
 
         let {boardIndex, tileX, tileY} = e.target.dataset
 
+        boardIndex = parseInt(boardIndex)
+        tileX = parseInt(tileX)
+        tileY = parseInt(tileY)
+
         if (gameState[boardIndex][tileY][tileX] != null) return
 
-        while (boardIndex>0 && gameState[boardIndex-1][tileY][tileX] == null) {
-            boardIndex--
-        }
+        [boardIndex, tileY, tileX] = applyGravityToMove(boardIndex, tileY, tileX)
+
 
         gameState[boardIndex][tileY][tileX] = player
 
-        const tile = boards[boardIndex].children[parseInt(tileY)*3 + parseInt(tileX)]
+        const tile = boards[boardIndex].children[parseInt(tileY)*span + parseInt(tileX)]
         tile.innerHTML = "•"
         tile.style.color = playerColours[player]
 
@@ -93,6 +115,56 @@ window.addEventListener("load", () => {
 
         clickTimeout = true
         setTimeout(() => clickTimeout = false, 250)
+    }
+
+    const applyGravityToMove = (boardIndex, tileY, tileX) => {
+
+        if (!gravityEnabled) return [boardIndex, tileY, tileX]
+
+        let counts
+
+        switch (gravity.axis) {
+            // up/down
+            case 0:
+                counts = gravity.modifier==-1 ? boardIndex : (span-1)-boardIndex
+
+                for (let i=0; i<counts; i++) {
+                    if (gameState[boardIndex + gravity.modifier][tileY][tileX]==null) {
+                        boardIndex += gravity.modifier
+                    } else {
+                        break
+                    }
+                }
+                break
+            // left/right
+            case 1:
+
+                counts = gravity.modifier==-1 ? tileX : (span-1)-tileX
+
+                for (let i=0; i<counts; i++) {
+                    if (gameState[boardIndex][tileY][tileX + gravity.modifier]==null) {
+                        tileX += gravity.modifier
+                    } else {
+                        break
+                    }
+                }
+                break
+            // forward/backward
+            case 2:
+
+                counts = gravity.modifier==-1 ? tileY : (span-1)-tileY
+
+                for (let i=0; i<counts; i++) {
+                    if (gameState[boardIndex][tileY + gravity.modifier][tileX]==null) {
+                        tileY += gravity.modifier
+                    } else {
+                        break
+                    }
+                }
+                break
+        }
+
+        return [boardIndex, tileY, tileX]
     }
 
     // Check axes of last placed item
@@ -208,29 +280,79 @@ window.addEventListener("load", () => {
 
 
 
-    const boards = Array.from(document.querySelectorAll(".board"))
-    boards.forEach((board, bi) => {
-        const tiles = Array.from(board.querySelectorAll("div"))
+    const makeBoards = () => {
 
-        tiles.forEach((tile, ti) => {
-            tile.dataset.boardIndex = bi
-            tile.dataset.tileX = ti%3
-            tile.dataset.tileY = parseInt(ti/3)
+        boardsContainer.innerHTML = ""
+        boards = []
+        gameState = []
 
-            tile.addEventListener("click", handleClick)
-        })
-    })
+        player = 0
+        span = boardSizeDropdown.value
+        players = numPlayersInput.value
+        tiltValue = span==3 ? 20 : 30
+        tiltValue = span==7 ? 40 : tiltValue
 
+        let perspectiveX = 150
+        let perspectiveY = 1000
 
-    let rotating = false
-    let direction = -1
-    let rotationValue = 0
+        if (span!=3) {
+            boardsContainer.style.marginTop = "0"
+
+            if (span==7) {
+                boardsContainer.style.marginTop = "100px"
+                perspectiveY = 800
+            }
+        }
+        boardsContainer.style.perspectiveOrigin = `${perspectiveX}px ${perspectiveY}px`
+
+        for (let b=0; b<span; b++) {
+
+            const board = document.createElement("div")
+            const tileSize = 300/span
+
+            board.className = "board"
+            board.style.gridTemplateColumns = `${tileSize}px `.repeat(span)
+            board.style.gridTemplateRows = `${tileSize}px `.repeat(span)
+            board.style.transform = `rotateX(${tiltValue}deg) rotateZ(${rotationValue}deg)`
+
+            if (span==7) {
+                board.style.marginTop = "-70%"
+            }
+
+            const boardGameState = []
+
+            for (let r=0; r<span; r++) {
+
+                const rowGameState = []
+
+                for (let c=0; c<span; c++) {
+                    const tile = document.createElement("div")
+                    tile.dataset.boardIndex = b
+                    tile.dataset.tileY = r
+                    tile.dataset.tileX = c
+
+                    tile.addEventListener("click", handleClick)
+
+                    board.appendChild(tile)
+                    rowGameState.push(null)
+                }
+
+                boardGameState.push(rowGameState)
+            }
+
+            boardsContainer.appendChild(board)
+            boards.push(board)
+            gameState.push(boardGameState)
+        }
+    }
+    makeBoards()
+
 
     const rotate = () => {
 
         boards.forEach(board => {
-            rotationValue += direction
-            board.style.transform = `rotateX(20deg) rotateZ(${rotationValue}deg)`
+            rotationValue += rotationDirection
+            board.style.transform = `rotateX(${tiltValue}deg) rotateZ(${rotationValue}deg)`
         })
 
         if (rotating) {
@@ -243,16 +365,18 @@ window.addEventListener("load", () => {
 
         if (e.code=="ArrowLeft") {
             rotating = true
-            direction = -1
+            rotationDirection = -1
             rotate()
         } else if (e.code=="ArrowRight") {
             rotating = true
-            direction = 1
+            rotationDirection = 1
             rotate()
         }
     })
 
     window.addEventListener("keyup", () => rotating = false)
+
+    resetButton.addEventListener("click", makeBoards)
 
     const directions = {
         up: 0,
@@ -276,6 +400,9 @@ window.addEventListener("load", () => {
 
             const direction = button.id.replace("Button", "")
             const max = Math.abs((modifier[direction]==-1 ? span-1 : 0)-(span-1))
+
+            gravity.axis = directions[direction]
+            gravity.modifier = modifier[direction]
 
             switch (directions[direction]) {
 
@@ -397,41 +524,20 @@ window.addEventListener("load", () => {
 
 Player: <span id="playerNum" style="color:blue">•</span><br><br>
 
+<div id="options">
+    Board Size:
+    <select id="boardSizeDropdown">
+        <option value="3">3</option>
+        <option value="5">5</option>
+        <option value="7">7</option>
+    </select><br>
+    Num Players:
+    <input id="numPlayersInput" type="number" min="1" max="10" value="2"><br>
+    <button id="resetButton">Reset</button>
+</div>
+
 <div id="content">
     <div id="boardsContainer">
-        <div class="board">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-        </div>
-        <div class="board">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-        </div>
-        <div class="board">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-        </div>
     </div>
 </div>
 
