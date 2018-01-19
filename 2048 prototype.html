@@ -69,6 +69,22 @@
         margin-left: 50px;
      }
 
+    #flatArrowsContainer > div:first-child {
+        transform: rotate(45deg);
+    }
+
+    #flatArrowsContainer > div:nth-child(2) {
+        transform: rotate(135deg);
+    }
+
+    #flatArrowsContainer > div:nth-child(3) {
+        transform: rotate(315deg);
+    }
+
+    #flatArrowsContainer > div:last-child {
+        transform: rotate(225deg);
+    }
+
     #flatArrowsContainer > div, #verticalArrowsContainer > div {
         height: 100px;
         width: 100px;
@@ -84,6 +100,10 @@
     }
     .selectedGravity {
         color: #4DD !important;
+    }
+    #verticalArrowsContainer > div:first-child {
+        z-index: 1000;
+        position: relative;
     }
 </style>
 <script>
@@ -569,14 +589,14 @@ Player: <span id="playerNum" style="color:blue">•</span><br><br>
 
     <div id="arrowsContainer">
         <div id="flatArrowsContainer">
-            <div class="arrow" id="leftArrow">↖</div>
-            <div class="arrow" id="forwardArrow">↗</div>
-            <div class="arrow" id="backwardArrow">↙</div>
-            <div class="arrow" id="rightArrow">↘</div>
+            <div class="arrow" id="leftArrow">⇦</div>
+            <div class="arrow" id="forwardArrow">⇦</div>
+            <div class="arrow" id="backwardArrow">⇦</div>
+            <div class="arrow" id="rightArrow">⇦</div>
         </div>
         <div id="verticalArrowsContainer">
-            <div class="arrow" id="upArrow">↑</div>
-            <div class="arrow selectedGravity" id="downArrow">↓</div>
+            <div class="arrow" id="upArrow">⇧</div>
+            <div class="arrow selectedGravity" id="downArrow">⇩</div>
         </div>
     </div>
 </div>
