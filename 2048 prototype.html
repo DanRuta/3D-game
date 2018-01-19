@@ -10,6 +10,13 @@
         font-size: 40pt;
         overflow: hidden;
     }
+    #playerNum {
+        color: blue;
+    }
+    #winsDisplay {
+        display: none;
+        margin-left: 10px;
+    }
     #tip {
         font-size: 14pt;
     }
@@ -20,7 +27,28 @@
     }
     #options {
         position: absolute;
+        margin-top: 25px;
         font-size: 12pt;
+    }
+    #configs {
+        display: flex;
+        flex-direction: column;
+        background-color: rgba(255, 255, 255, 0.5);
+        padding: 10px;
+        margin: 10px;
+        margin-bottom: 100px;
+    }
+    #configs > div {
+        display: flex;
+        justify-content: space-between;
+    }
+    #configs > div > div:last-child {
+        display: flex;
+        justify-content: center;
+        width: 30%;
+    }
+    #configs > div > div:last-child > * {
+        width: 100%;
     }
     #boardsContainer {
         display: flex;
@@ -29,6 +57,7 @@
         perspective-origin: 150px 1000px;
         margin-top: 200px;
         user-select: none;
+        margin-left: 100px;
     }
     .board {
         display: inline-grid;
@@ -146,7 +175,7 @@ window.addEventListener("load", () => {
         modifier: -1 // -1 for normal, 1 for reverse
     }
 
-    const handleClick = e => {
+    const makeMove = e => {
 
         // Avoid accidental double click activation
         if (clickTimeout) {
@@ -170,12 +199,14 @@ window.addEventListener("load", () => {
         tile.innerHTML = "•"
         tile.style.color = playerColours[player]
 
+        playerNum.innerHTML = "•"
+
         if (checkGameStatus(boardIndex, tileY, tileX, player)) {
             player = ++player%players
-            playerNum.innerHTML = "•"
             playerNum.style.color = playerColours[player]
+            winsDisplay.style.display = "none"
         } else {
-            playerNum.innerHTML = "• wins"
+            winsDisplay.style.display = "inline-block"
         }
 
         clickTimeout = true
@@ -349,6 +380,7 @@ window.addEventListener("load", () => {
         boardsContainer.innerHTML = ""
         boards = []
         gameState = []
+        gravityEnabled = !placeAnywhereCheckbox.checked
 
         player = 0
         span = boardSizeDropdown.value
@@ -396,7 +428,7 @@ window.addEventListener("load", () => {
                     tile.dataset.tileY = r
                     tile.dataset.tileX = c
 
-                    tile.addEventListener("click", handleClick)
+                    tile.addEventListener("click", makeMove)
 
                     tile.addEventListener("mouseover", () => styleHoverPreview(b, r, c))
 
@@ -666,20 +698,43 @@ window.addEventListener("load", () => {
 </script>
 <body>
 
-Player: <span id="playerNum" style="color:blue">•</span>
-<div id="tip">Scroll, drag, or use the arrow keys to rotate<br>Click arrows to change gravity</div><br>
+Player: <span id="playerNum">•</span><span id="winsDisplay"> wins</span>
+<div id="tip">Scroll, drag, or use the arrow keys to rotate<br>Click arrows to change gravity</div>
 
 
 <div id="options">
-    Board Size:
-    <select id="boardSizeDropdown">
-        <option value="3">3</option>
-        <option value="5">5</option>
-        <option value="7">7</option>
-    </select><br>
-    Num Players:
-    <input id="numPlayersInput" type="number" min="1" max="10" value="2"><br>
-    <button id="resetButton">Reset</button>
+
+    <div id="configs">
+        <div>
+            <span>Board Size:</span>
+            <div>
+                <select id="boardSizeDropdown">
+                    <option value="3">3</option>
+                    <option value="5">5</option>
+                    <option value="7">7</option>
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <span>Num Players:</span>
+            <div>
+
+            <input id="numPlayersInput" type="number" min="1" max="10" value="2"><br>
+            </div>
+        </div>
+
+        <div>
+            <span>Place anywhere:</span>
+            <div>
+                <input id="placeAnywhereCheckbox" type="checkbox">
+            </div>
+        </div>
+        <br>
+
+        <button id="resetButton">Reset</button>
+    </div>
+
 
     <div id="arrowsContainer">
         <div id="flatArrowsContainer">
