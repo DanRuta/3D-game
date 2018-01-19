@@ -27,15 +27,15 @@
         margin-top: 200px;
     }
     .board {
-        transform: rotateX(20deg);
-        margin-top: -50%;
-        background-color: rgba(255, 255, 255, 0.5);
-        font-size: 100pt;
         display: inline-grid;
         grid-template-columns: 100px 100px 100px;
         grid-template-rows: 100px 100px 100px;
         height: 300px;
         width: 300px;
+        transform: rotateX(20deg) rotateY(-45deg);
+        margin-top: -50%;
+        background-color: rgba(255, 255, 255, 0.5);
+        font-size: 100pt;
         border: 1px solid black;
     }
     .board::before {
@@ -49,12 +49,41 @@
         font-size: 12pt;
     }
     .board > div {
-        /*height: 100px;*/
-        /*width: 100px;*/
         display: flex;
         justify-content: center;
         align-items: center;
         border: 1px solid black;
+    }
+    #arrowsContainer {
+        perspective: 1000px;
+    }
+
+    #flatArrowsContainer {
+        display: inline-grid;
+        grid-template-columns: 100px 100px;
+        grid-template-rows: 100px 100px;
+        transform: rotateX(50deg) rotateZ(-90deg);
+    }
+    #verticalArrowsContainer {
+        margin-top: -200px;
+        margin-left: 50px;
+     }
+
+    #flatArrowsContainer > div, #verticalArrowsContainer > div {
+        height: 100px;
+        width: 100px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 100pt;
+        color: #555;
+        cursor: pointer;
+    }
+    #flatArrowsContainer > div:hover, #verticalArrowsContainer > div:hover {
+        color: #DD6;
+    }
+    .selectedGravity {
+        color: #4DD !important;
     }
 </style>
 <script>
@@ -71,7 +100,7 @@ window.addEventListener("load", () => {
     let boards = []
     let rotating = false
     let rotationDirection = -1
-    let rotationValue = 0
+    let rotationValue = -45
     let tiltValue
     let clickTimeout = false
     let gravityEnabled = true
@@ -353,6 +382,7 @@ window.addEventListener("load", () => {
         boards.forEach(board => {
             rotationValue += rotationDirection
             board.style.transform = `rotateX(${tiltValue}deg) rotateZ(${rotationValue}deg)`
+            flatArrowsContainer.style.transform = `rotateX(50deg) rotateZ(${rotationValue-45}deg)`
         })
 
         if (rotating) {
@@ -395,11 +425,15 @@ window.addEventListener("load", () => {
         backward: 1
     }
 
-    gravityButtons.querySelectorAll("button").forEach(button => {
-        button.addEventListener("click", () => {
+    // gravityButtons.querySelectorAll("button").forEach(button => {
+    arrowsContainer.querySelectorAll(".arrow").forEach(arrow => {
+        arrow.addEventListener("click", () => {
 
-            const direction = button.id.replace("Button", "")
+            const direction = arrow.id.replace("Arrow", "")
             const max = Math.abs((modifier[direction]==-1 ? span-1 : 0)-(span-1))
+
+            document.querySelector(".selectedGravity").classList.toggle("selectedGravity")
+            arrow.classList.toggle("selectedGravity")
 
             gravity.axis = directions[direction]
             gravity.modifier = modifier[direction]
@@ -513,8 +547,6 @@ window.addEventListener("load", () => {
 
             reDrawBoard()
             checkAll()
-
-            console.log(gameState)
         })
     })
 })
@@ -534,21 +566,24 @@ Player: <span id="playerNum" style="color:blue">•</span><br><br>
     Num Players:
     <input id="numPlayersInput" type="number" min="1" max="10" value="2"><br>
     <button id="resetButton">Reset</button>
+
+    <div id="arrowsContainer">
+        <div id="flatArrowsContainer">
+            <div class="arrow" id="leftArrow">↖</div>
+            <div class="arrow" id="forwardArrow">↗</div>
+            <div class="arrow" id="backwardArrow">↙</div>
+            <div class="arrow" id="rightArrow">↘</div>
+        </div>
+        <div id="verticalArrowsContainer">
+            <div class="arrow" id="upArrow">↑</div>
+            <div class="arrow selectedGravity" id="downArrow">↓</div>
+        </div>
+    </div>
 </div>
 
 <div id="content">
     <div id="boardsContainer">
     </div>
-</div>
-
-
-<div id="gravityButtons">
-    <button id="leftButton">Left</button>
-    <button id="rightButton">Right</button>
-    <button id="upButton">Up</button>
-    <button id="downButton">Down</button>
-    <button id="forwardButton">Forward</button>
-    <button id="backwardButton">Backward</button>
 </div>
 
 </body>
