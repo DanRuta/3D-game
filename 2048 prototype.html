@@ -58,6 +58,10 @@
         align-items: center;
         border: 1px solid black;
     }
+    .board > div:hover {
+        background-color: rgba(255, 255, 255, 1);
+        cursor: pointer;
+    }
     #arrowsContainer {
         margin-left: 10px;
         perspective: 1000px;
@@ -110,6 +114,9 @@
     #verticalArrowsContainer > div:first-child {
         z-index: 1000;
         position: relative;
+    }
+    .hoveredTile {
+        background-color: rgba(255, 255, 255, 1);
     }
 </style>
 <script>
@@ -336,8 +343,6 @@ window.addEventListener("load", () => {
         }
     }
 
-
-
     const makeBoards = () => {
 
         mouseIsDown = false
@@ -392,6 +397,8 @@ window.addEventListener("load", () => {
                     tile.dataset.tileX = c
 
                     tile.addEventListener("click", handleClick)
+
+                    tile.addEventListener("mouseover", () => styleHoverPreview(b, r, c))
 
                     board.appendChild(tile)
                     rowGameState.push(null)
@@ -533,6 +540,38 @@ window.addEventListener("load", () => {
     })
 
 
+    // Highlight the column/row/vertical-column that will be affected by a move
+    const styleHoverPreview = (board, row, col) => {
+
+        if (!gravityEnabled) return
+
+        // Clear last highlighted tiles
+        const existingHovered = content.querySelectorAll(".hoveredTile")
+        existingHovered.forEach(tile => tile.classList.toggle("hoveredTile"))
+
+        switch (gravity.axis) {
+            // up/down
+            case 0:
+                for (let b=0; b<span; b++) {
+                    boards[b].children[row*span + col].classList.toggle("hoveredTile")
+                }
+                break
+            // left/right
+            case 1:
+                for (let c=0; c<span; c++) {
+                    boards[board].children[row*span + c].classList.toggle("hoveredTile")
+                }
+                break
+            // forward/backward
+            case 2:
+                for (let r=0; r<span; r++) {
+                    boards[board].children[r*span + col].classList.toggle("hoveredTile")
+                }
+                break
+        }
+
+    }
+
     const rotate = () => {
 
         boards.forEach(board => {
@@ -585,7 +624,7 @@ window.addEventListener("load", () => {
     // Rotate via mouse scroll
     window.addEventListener("wheel", ({deltaY}) => {
         rotating = true
-        rotationDirection = (deltaY > 0 ? 1 : -1) * (0.45 + 1/span)
+        rotationDirection = (deltaY > 0 ? 1 : -1) * (0.5 + 1/span)
         rotate()
         rotating = false
     })
