@@ -8,6 +8,10 @@
         background-color: #DDD;
         font-family: Helvetica;
         font-size: 40pt;
+        overflow: hidden;
+    }
+    #tip {
+        font-size: 14pt;
     }
     #content {
         display: flex;
@@ -15,7 +19,6 @@
         align-items: center;
     }
     #options {
-        /*margin-top: 100px;*/
         position: absolute;
         font-size: 12pt;
     }
@@ -25,6 +28,7 @@
         perspective: 1000px;
         perspective-origin: 150px 1000px;
         margin-top: 200px;
+        user-select: none;
     }
     .board {
         display: inline-grid;
@@ -55,7 +59,9 @@
         border: 1px solid black;
     }
     #arrowsContainer {
+        margin-left: 10px;
         perspective: 1000px;
+        user-select: none;
     }
 
     #flatArrowsContainer {
@@ -114,6 +120,9 @@ window.addEventListener("load", () => {
 
     const playerColours = ["blue", "red", "green", "purple", "yellow", "brown", "black", "cyan", "pink", "darkgrey"]
 
+    let mouseIsDown = false
+    let dragStartX = 0
+    let draggedAmount = 0
     let span = 5
     let player = 0
     let players = 3
@@ -331,6 +340,7 @@ window.addEventListener("load", () => {
 
     const makeBoards = () => {
 
+        mouseIsDown = false
         boardsContainer.innerHTML = ""
         boards = []
         gameState = []
@@ -363,6 +373,7 @@ window.addEventListener("load", () => {
             board.style.gridTemplateColumns = `${tileSize}px `.repeat(span)
             board.style.gridTemplateRows = `${tileSize}px `.repeat(span)
             board.style.transform = `rotateX(${tiltValue}deg) rotateZ(${rotationValue}deg)`
+            flatArrowsContainer.style.transform = `rotateX(${tiltValue+30}deg) rotateZ(${rotationValue-45}deg)`
 
             if (span==7) {
                 board.style.marginTop = "-70%"
@@ -397,55 +408,6 @@ window.addEventListener("load", () => {
     makeBoards()
 
 
-    const rotate = () => {
-
-        boards.forEach(board => {
-            rotationValue += rotationDirection
-            board.style.transform = `rotateX(${tiltValue}deg) rotateZ(${rotationValue}deg)`
-            flatArrowsContainer.style.transform = `rotateX(50deg) rotateZ(${rotationValue-45}deg)`
-        })
-
-        if (rotating) {
-            setTimeout(rotate, 10)
-        }
-    }
-
-
-    window.addEventListener("keydown", (e) => {
-
-        if (e.code=="ArrowLeft") {
-            rotating = true
-            rotationDirection = -1
-            rotate()
-        } else if (e.code=="ArrowRight") {
-            rotating = true
-            rotationDirection = 1
-            rotate()
-        }
-    })
-
-    window.addEventListener("keyup", () => rotating = false)
-
-    resetButton.addEventListener("click", makeBoards)
-
-    const directions = {
-        up: 0,
-        down: 0,
-        left: 1,
-        right: 1,
-        forward: 2,
-        backward: 2
-    }
-    const modifier = {
-        up: 1,
-        down: -1,
-        left: -1,
-        right: 1,
-        forward: -1,
-        backward: 1
-    }
-
-    // gravityButtons.querySelectorAll("button").forEach(button => {
     arrowsContainer.querySelectorAll(".arrow").forEach(arrow => {
         arrow.addEventListener("click", () => {
 
@@ -569,12 +531,105 @@ window.addEventListener("load", () => {
             checkAll()
         })
     })
+
+
+    const rotate = () => {
+
+        boards.forEach(board => {
+            rotationValue += rotationDirection
+            board.style.transform = `rotateX(${tiltValue}deg) rotateZ(${rotationValue}deg)`
+            flatArrowsContainer.style.transform = `rotateX(${tiltValue+30}deg) rotateZ(${rotationValue-45}deg)`
+        })
+
+        if (rotating) {
+            setTimeout(rotate, 10)
+        }
+    }
+
+
+    // Rotate by using arrows
+    window.addEventListener("keydown", (e) => {
+
+        if (e.code=="ArrowLeft") {
+            rotating = true
+            rotationDirection = -(0.45 + 1/span)
+            rotate()
+        } else if (e.code=="ArrowRight") {
+            rotating = true
+            rotationDirection = 0.45 + 1/span
+            rotate()
+        }
+    })
+
+    window.addEventListener("keyup", () => rotating = false)
+
+    resetButton.addEventListener("click", makeBoards)
+
+    const directions = {
+        up: 0,
+        down: 0,
+        left: 1,
+        right: 1,
+        forward: 2,
+        backward: 2
+    }
+    const modifier = {
+        up: 1,
+        down: -1,
+        left: -1,
+        right: 1,
+        forward: -1,
+        backward: 1
+    }
+
+    // Rotate via mouse scroll
+    window.addEventListener("wheel", ({deltaY}) => {
+        rotating = true
+        rotationDirection = (deltaY > 0 ? 1 : -1) * (0.45 + 1/span)
+        rotate()
+        rotating = false
+    })
+
+    window.addEventListener("mousedown", () => {
+        mouseIsDown = true
+    })
+    window.addEventListener("mouseup", () => {
+        mouseIsDown = false
+        dragStartX = 0
+        draggedAmount = 0
+    })
+    window.addEventListener("dragend", () => {
+        mouseIsDown = false
+        dragStartX = 0
+        draggedAmount = 0
+    })
+
+    // Rotate by dragging
+    content.addEventListener("mousemove", (e) => {
+        if (mouseIsDown) {
+
+            if (dragStartX==0) {
+                dragStartX = e.clientX
+            }
+
+            draggedAmount = dragStartX - e.clientX
+
+            if (Math.abs(draggedAmount) > 10) {
+                rotating = true
+                rotationDirection = (draggedAmount > 0 ? 1 : -1) * (0.45 + 1/span)
+                rotate()
+                rotating = false
+            }
+        }
+    })
 })
 
 </script>
 <body>
 
-Player: <span id="playerNum" style="color:blue">•</span><br><br>
+Player: <span id="playerNum" style="color:blue">•</span>
+<div id="tip">Scroll, drag, or use the arrow keys to rotate<br>Click arrows to change gravity</div><br>
+
 
 <div id="options">
     Board Size:
