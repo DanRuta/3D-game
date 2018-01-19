@@ -242,8 +242,7 @@ const handleWebSocket = (connection, clients) => {
                     userId: message.userId,
                     username : message.username,
                     room: message.room,
-                    type: message.type,
-                    time: new Date()
+                    type: message.type
                 }
             }
 

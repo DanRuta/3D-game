@@ -3,7 +3,7 @@
 let ws, serverSideFetchSent = false
 let hash = window.location.hash.split("#")[1]
 
-window.vrscribble = {roomName : window.localStorage.getItem("roomName")}
+window.tictactoe = {roomName : window.localStorage.getItem("roomName")}
 
 if (window.location.protocol.includes("https"))
      ws = new WebSocket(`wss://${window.document.location.hostname}:443`)
@@ -13,9 +13,9 @@ const authoriseUser = () => {
 
     coordsBox.style.color = "rgba(150,150,150,0.8)"
 
-    if (hash) window.vrscribble.roomName = hash
+    if (hash) window.tictactoe.roomName = hash
 
-    if (!window.vrscribble.roomName) {
+    if (!window.tictactoe.roomName) {
         return coordsBox.innerHTML = "No room name given"
     }
 
@@ -50,15 +50,15 @@ const serverSideAuthorisation = (token) => {
 
         fetch("tokenSignin", {
             method: "Post",
-            body: JSON.stringify({token, roomName: window.vrscribble.roomName})
+            body: JSON.stringify({token, roomName: window.tictactoe.roomName})
         }).then(response => response.json())
         .then(({username, userId, roomExists}) => {
 
-            window.vrscribble.username = username
-            window.vrscribble.userId = userId
+            window.tictactoe.username = username
+            window.tictactoe.userId = userId
             coordsBox.innerHTML = "Connecting to room..."
 
-            if (!roomExists) return coordsBox.innerHTML = `Room ${window.vrscribble.roomName} not found`
+            if (!roomExists) return coordsBox.innerHTML = `Room ${window.tictactoe.roomName} not found`
 
             initPage()
         })
@@ -68,39 +68,27 @@ const serverSideAuthorisation = (token) => {
 const initPage = () => {
 
     coordsBox.style.color = "rgba(50,50,50,0.8)"
-    usernameDisplay.innerHTML = window.vrscribble.username
-    roomNameDisplay.innerHTML = window.vrscribble.roomName
-
-    const voiceListItems = Array.from(commandList.querySelectorAll("div:not(:first-child)"))
+    usernameDisplay.innerHTML = window.tictactoe.username
+    roomNameDisplay.innerHTML = window.tictactoe.roomName
 
     enableFullScreen()
 
     let isDrawing = false
     let interfaceActions = []
 
-    // Speech Recognition
-    let recognition = new webkitSpeechRecognition()
-    recognition.continuous = true
-    recognition.lang = "en-GB"
-    recognition.onresult = event => handleCommand(event.results[event.results.length-1][0].transcript.trim().toLowerCase(), interfaceActions)
-    voiceButton.addEventListener("click", () => recognition.start())
-
     window.addEventListener("deviceorientation", () => {
-
-        drawingArea.style.backgroundColor = isDrawing ? "#111" : "#000"
 
         const alpha = Math.round(event.alpha)-360
         const beta = Math.max(Math.min(Math.round(event.beta)*2, 150), -150)
 
         // Display the alpha and beta values
         coordsBox.innerHTML = `(Alpha: ${alpha}, Beta: ${beta})`
-        coordsBox.innerHTML += isDrawing ? "\nDrawing" : ""
 
         // Compile the payload
         const payload = {
-            username : window.vrscribble.username,
-            userId: window.vrscribble.userId,
-            room: window.vrscribble.roomName,
+            username : window.tictactoe.username,
+            userId: window.tictactoe.userId,
+            room: window.tictactoe.roomName,
             type: "controller",
             alpha: alpha,
             beta: beta,
@@ -114,70 +102,14 @@ const initPage = () => {
         // Clear the interface actions list
         interfaceActions = []
     })
-
-    drawingArea.addEventListener("touchstart", () => {event.preventDefault();isDrawing = true})
-    drawingArea.addEventListener("touchend", () => {isDrawing = false})
 }
 
-const handleCommand = (transcript, interfaceActions) => {
-
-    let command
-
-    switch(transcript){
-
-        case "close": case "clues": case "clothes":
-            command = "close"
-            break
-
-        case "options": case "option": case "auctions": case "auction": case "stop shins":
-            command = "options"
-            break
-
-        case "undo": case "under": case "andy": case "london": case "and do":
-            command = "undo"
-            break
-
-        case "redo": case "reading": case "we do": case "radio":
-            command = "redo"
-            break
-
-        case "colour": case "color":
-            command = "colour"
-            break
-
-        case "opacity": case "audacity": case "passivity": case "pacity": case "Spacity": case "capacity":
-        case "passive d": case "passenger": case "past due": case "apache":
-            command = "opacity"
-            break
-
-        case "thickness": case "sickness": case "hypnos":
-            command = "thickness"
-            break
-
-        case "screenshot": case "screenshots": case "save": case "saved":
-            command = "screenshot"
-            break
-
-        default:
-            console.log("Unrecognised... "+transcript)
-            return
-    }
-
-    if (!command) return
-
-    const voiceListItem = document.getElementById(command)
-    voiceListItem.style.color = "white"
-    setTimeout(() => voiceListItem.style.color = "rgba(50,50,50,0.8)", 500)
-
-    interfaceActions.push(command)
-}
 
 const enableFullScreen = () => {
 
     const getFullScreen = () => {
 
         main.removeEventListener("click", getFullScreen)
-        drawingArea.removeEventListener("click", getFullScreen)
 
         new NoSleep().enable()
 
@@ -189,7 +121,6 @@ const enableFullScreen = () => {
     }
 
     main.addEventListener("click", getFullScreen)
-    drawingArea.addEventListener("click", getFullScreen, true)
 }
 
 window.addEventListener("load", authoriseUser)
