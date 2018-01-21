@@ -15,11 +15,17 @@ if (window.location.protocol.includes("https")) {
 
 const users = {}
 
+let hasController
+let controls
+let renderer
+
 let userInterface, effect
 let sphereRadius = 1000
 let sphereVertexCount = 40
 let serverSideFetchSent = false
 let hash = window.location.hash.split("#")[1]
+
+let testBox
 
 // Authorise the user from Google
 const authoriseUser = () => {
@@ -86,7 +92,7 @@ const init = () => {
     screen.keepAwake = true
 
     // Initialise THREEjs components, starting with the renderer
-    const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true})
+    renderer = new THREE.WebGLRenderer({antialias: true, alpha: true})
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.autoClear = false
 
@@ -141,9 +147,48 @@ const init = () => {
 
     window.tictactoe.camera = new THREE.PerspectiveCamera(100, window.innerWidth/window.innerHeight, 1, 4000)
     // Uncomment to move camera to outside the sphere (debuging)
-    // window.tictactoe.camera.position.z = sphereRadius*2
+    // window.tictactoe.camera.position.z = sphereRadius
     window.tictactoe.scene.add(window.tictactoe.camera)
-    window.tictactoe.camera.rotation.order = "YXZ"
+    // window.tictactoe.camera.rotation.order = "YXZ"
+    window.tictactoe.camera.rotation.x = 3.1
+    window.tictactoe.camera.rotation.y = 0
+    window.tictactoe.camera.rotation.z = 3.1
+
+
+    // For continuing, related to rotations
+    // https://stackoverflow.com/questions/20089098/three-js-adding-and-removing-children-of-rotated-objects/20097857#20097857
+
+    const testBoxCanvas = document.createElement("canvas")
+    testBoxCanvas.height = 100
+    testBoxCanvas.width = 100
+    const testBoxContext = testBoxCanvas.getContext("2d")
+    testBoxContext.fillStyle = "blue"
+    testBoxContext.fillRect(0, 0, 100, 100)
+
+    const testBoxTexture = new THREE.Texture(testBoxCanvas)
+    testBoxTexture.minFilter = THREE.NearestFilter
+
+    const testBoxGeometry = new THREE.BoxGeometry(100, 100, 100)
+    const testBoxMaterial = new THREE.MeshBasicMaterial({
+        map: testBoxTexture
+    })
+    testBox = new THREE.Mesh(testBoxGeometry, testBoxMaterial)
+    // testBox.position.y = 250
+    testBox.position.z = 250
+
+    window.tictactoe.scene.add(testBox)
+
+    window.addEventListener("deviceorientation", (e) => {
+        if (!hasController) {
+            // console.log(e)
+            testBox.rotation.y = -0.0174533*e.alpha
+            testBox.rotation.z = -0.0174533*e.beta / 20
+
+            // window.tictactoe.camera.rotation.x = -0.0174533*e.alpha
+            // window.tictactoe.camera.rotation.z = -0.0174533*e.beta
+            background.rotation.z = -0.0174533*e.beta
+        }
+    })
 
 
     // Initialise Canvases
@@ -159,9 +204,13 @@ const init = () => {
 
     // Colour in the background sphere
     backgroundCanvasContext.beginPath()
-    backgroundCanvasContext.rect(0,0,backgroundCanvas.width, backgroundCanvas.height)
+    backgroundCanvasContext.rect(0,0, backgroundCanvas.width, backgroundCanvas.height)
     backgroundCanvasContext.fillStyle = "white"
     backgroundCanvasContext.fill()
+        // For debugging, to see camera movements actually doing something
+        backgroundCanvasContext.moveTo(0, 0)
+        backgroundCanvasContext.lineTo(backgroundCanvas.width, backgroundCanvas.height)
+        backgroundCanvasContext.stroke()
 
     // Add background image if one exists
     // TODO, re-implement adding backgroundImgBase64 from server. Leave this here until then
@@ -178,7 +227,8 @@ const init = () => {
     // Background
     window.tictactoe.textures.backgroundTexture = new THREE.Texture(backgroundCanvas)
     const backgroundMaterial = new THREE.MeshBasicMaterial({map: window.tictactoe.textures.backgroundTexture, side: THREE.BackSide, color: 0xffffff})
-    window.tictactoe.scene.add(new THREE.Mesh(new THREE.SphereGeometry(sphereRadius, sphereVertexCount, sphereVertexCount), backgroundMaterial))
+    const background = new THREE.Mesh(new THREE.SphereGeometry(sphereRadius, sphereVertexCount, sphereVertexCount), backgroundMaterial)
+    window.tictactoe.scene.add(background)
 
 
     // Buffer
@@ -197,15 +247,75 @@ const init = () => {
     }
 
     // Controls
-    let controls = new THREE.OrbitControls(window.tictactoe.camera, renderer.domElement)
+    // let controls = new THREE.OrbitControls(window.tictactoe.camera, renderer.domElement)
+    // controls.target.set(
+    //     window.tictactoe.camera.position.x+0.15,
+    //     window.tictactoe.camera.position.y,
+    //     window.tictactoe.camera.position.z
+    // )
+    // controls.noPan  = true
+    // controls.noZoom = true
+
+
+    // // Set VR controls if available
+    // const setOrientationControls = event => {
+
+    //     if (!event.alpha) return
+
+    //     // controls = new THREE.DeviceOrientationControls(window.tictactoe.camera, true)
+    //     controls = new THREE.VRControls(window.tictactoe.camera)
+    //     controls.update()
+
+    //     window.removeEventListener("deviceorientation", setOrientationControls)
+    // }
+    // window.addEventListener("deviceorientation", setOrientationControls)
+
+
+    // Animation loop
+    const animate = () => {
+
+        requestAnimationFrame(animate)
+
+        if (controls) {
+            controls.update()
+        }
+
+        // Do here any changes to VR UI elements, when needed
+
+        // Update sphere textures
+        for (let texture in window.tictactoe.textures) {
+            window.tictactoe.textures[texture].needsUpdate = true
+
+        }
+
+        testBoxTexture.needsUpdate = true
+
+        renderer.clear()
+        effect.render(window.tictactoe.scene, window.tictactoe.camera)
+    }
+
+    animate()
+    connectWebSocket()
+}
+
+// Enable VR panning once a controller is connected
+const enableControls = () => {
+
+    controls = new THREE.OrbitControls(window.tictactoe.camera, renderer.domElement)
+
     controls.target.set(
         window.tictactoe.camera.position.x+0.15,
         window.tictactoe.camera.position.y,
         window.tictactoe.camera.position.z
     )
+
+    // requestAnimationFrame(() => {
+    //     window.tictactoe.camera.rotation.x = 3.1
+    //     window.tictactoe.camera.rotation.y = 0
+    //     window.tictactoe.camera.rotation.z = 3.1
+    // })
     controls.noPan  = true
     controls.noZoom = true
-
 
     // Set VR controls if available
     const setOrientationControls = event => {
@@ -219,27 +329,6 @@ const init = () => {
         window.removeEventListener("deviceorientation", setOrientationControls)
     }
     window.addEventListener("deviceorientation", setOrientationControls)
-
-
-    // Animation loop
-    const animate = () => {
-
-        requestAnimationFrame(animate)
-        controls.update()
-
-        // Do here any changes to VR UI elements, when needed
-
-        // Update sphere textures
-        for (let texture in window.tictactoe.textures) {
-            window.tictactoe.textures[texture].needsUpdate = true
-        }
-
-        renderer.clear()
-        effect.render(window.tictactoe.scene, window.tictactoe.camera)
-    }
-
-    animate()
-    connectWebSocket()
 }
 
 // Register the page, serverside. Allow 5 attempts, until connection deemed too bad to continue
@@ -272,7 +361,7 @@ const initWebSockets = () => {
     ws.onmessage = event => {
 
         const data = JSON.parse(event.data)
-        console.log(data)
+        // console.log(data)
 
         // Route all message types to their respective actions
         switch (true) {
@@ -310,7 +399,18 @@ const initWebSockets = () => {
 
             default:
 
-                // Do the boards rotation
+                if (!hasController) {
+                    hasController = true
+                    renderToast("Your controller is connected")
+                    enableControls()
+                }
+
+                console.log(window.tictactoe.camera.rotation)
+
+                // Rotate the boards
+                testBox.rotation.y = -0.0174533*data.alpha
+                testBox.rotation.z = -0.0174533*data.beta / 20
+
         }
     }
 }
