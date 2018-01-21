@@ -176,17 +176,18 @@ window.addEventListener("load", () => {
     }
 
     const makeMove = e => {
-
         // Avoid accidental double click activation
         if (clickTimeout) {
             return
         }
-
+//        console.log(e)
         let {boardIndex, tileX, tileY} = e.target.dataset
 
         boardIndex = parseInt(boardIndex)
         tileX = parseInt(tileX)
         tileY = parseInt(tileY)
+      
+        console.log(boardIndex, tileX, tileY, player)
 
         if (gameState[boardIndex][tileY][tileX] != null) return
 
@@ -194,19 +195,25 @@ window.addEventListener("load", () => {
 
 
         gameState[boardIndex][tileY][tileX] = player
-
+//        console.log(player)
+      
         const tile = boards[boardIndex].children[parseInt(tileY)*span + parseInt(tileX)]
         tile.innerHTML = "•"
         tile.style.color = playerColours[player]
 
         playerNum.innerHTML = "•"
-
+        
+        
         if (checkGameStatus(boardIndex, tileY, tileX, player)) {
             player = ++player%players
             playerNum.style.color = playerColours[player]
             winsDisplay.style.display = "none"
+            localStorage.gameState = JSON.stringify(gameState);
+            localStorage.player = player;
         } else {
             winsDisplay.style.display = "inline-block"
+            localStorage.clear();
+           
         }
 
         clickTimeout = true
@@ -428,7 +435,17 @@ window.addEventListener("load", () => {
                     tile.dataset.tileY = r
                     tile.dataset.tileX = c
 
-                    tile.addEventListener("click", makeMove)
+                    tile.addEventListener("click", (e) => {
+                      ws.send(JSON.stringify({boardIndex:  e.target.dataset.boardIndex, 
+                                              tileX:  e.target.dataset.tileX, 
+                                              tileY:  e.target.dataset.tileY, 
+                                              player: player, 
+                                              userId: "1234", 
+                                              username: "rob",
+                                              type: "text", 
+                                              room: "room1"}))
+                      //makeMove(e)
+                    })
 
                     tile.addEventListener("mouseover", () => styleHoverPreview(b, r, c))
 
@@ -568,6 +585,7 @@ window.addEventListener("load", () => {
 
             reDrawBoard()
             checkAll()
+            ws.send(JSON.stringify({gameState: gameState, userId: "1234", username: "rob", type: "text", room: "room1"}))
         })
     })
 
@@ -634,7 +652,10 @@ window.addEventListener("load", () => {
 
     window.addEventListener("keyup", () => rotating = false)
 
-    resetButton.addEventListener("click", makeBoards)
+    resetButton.addEventListener("click", () => {
+      makeBoards()
+       ws.send(JSON.stringify({gameState: gameState, userId: "1234", username: "rob", type: "text", room: "room1"}))
+    })
 
     const directions = {
         up: 0,
@@ -663,6 +684,7 @@ window.addEventListener("load", () => {
 
     window.addEventListener("mousedown", () => {
         mouseIsDown = true
+      
     })
     window.addEventListener("mouseup", () => {
         mouseIsDown = false
@@ -693,6 +715,45 @@ window.addEventListener("load", () => {
             }
         }
     })
+  
+  const ws =  new WebSocket("ws://vrscrible.localhost:8000/room1");
+  
+  ws.addEventListener("message", (message) => {
+    const data = JSON.parse(message.data)
+    console.log(data)
+    if(data.gameState) {
+      gameState = JSON.parse(message.data).gameState
+      reDrawBoard()
+    } else if(data.boardIndex || data.boardIndex === 0) {
+      
+      let e = {};
+      e.target = {};
+      e.target.dataset = {};
+      e.target.dataset.boardIndex = data.boardIndex;
+      e.target.dataset.tileX = data.tileX;
+      e.target.dataset.tileY = data.tileY;
+      player = data.player;
+      makeMove(e)
+      reDrawBoard()
+  //    boardIndex: boardIndex, tileX: tileX, tileY: tileY, player: player,
+      
+    }
+    
+  })
+  
+  ws.addEventListener("open", () => {
+    console.log("connect ws")
+    ws.send(JSON.stringify({gameState: gameState, userId: "1234", username: "rob", type: "text", room: "room1"}))
+
+  })
+  
+  if(localStorage.gameState){
+    gameState = JSON.parse(localStorage.gameState);
+    player = localStorage.player
+    playerNum.style.color = playerColours[player]
+    reDrawBoard();
+  }
+  
 })
 
 </script>

@@ -233,9 +233,9 @@ const handleWebSocket = (connection, clients) => {
 
     try {
         connection.on("message", message => {
-
+            console.log(message)
             message = JSON.parse(message)
-
+            
             // Register the user data to the connection
             if (!connection.meta) {
                 connection.meta = {
@@ -247,7 +247,7 @@ const handleWebSocket = (connection, clients) => {
             }
 
             websocketClients.forEach(client => {
-                if (client.meta && client.meta.room == connection.meta.room && client.meta.type=="viewer") {
+                if (client.meta && client.meta.room == connection.meta.room) {
                     client.send(JSON.stringify(message))
                 }
             })
