@@ -14,6 +14,7 @@
     "node-fetch": "1.6.1",
     "mime-types": "2.x.x",
     "pug": "*",
+    "eslint": "^4.11.0",
     "redis": "2.6.x"
   }
 }
