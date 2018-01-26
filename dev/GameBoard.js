@@ -4,7 +4,9 @@ const test = "stuff"
 
 class GameBoard {
 
-    constructor ({span, gameState, makeMove, gravity, gravityEnabled}) {
+    constructor (game) {
+
+        const {span, gameState, gravity, gravityEnabled} = game
 
         this.playerColours = ["blue", "red", "green", "purple", "yellow", "brown", "black", "cyan", "pink", "darkgrey"]
         this.rotationValue = -45
@@ -49,7 +51,7 @@ class GameBoard {
                 for (let c=0; c<this.span; c++) {
                     const tile = document.createElement("div")
 
-                    tile.addEventListener("click", () => makeMove(b, c, r))
+                    tile.addEventListener("click", () => game.makeMove(game.playerIndex, b, r, c))
                     tile.addEventListener("mouseover", () => this.styleHoverPreview(b, r, c))
 
                     board.appendChild(tile)
@@ -61,22 +63,45 @@ class GameBoard {
 
     }
 
-    renderBoard () {
+    render (gameState) {
+        for (let b=0; b<this.span; b++) {
+            for (let r=0; r<this.span; r++) {
+                for (let c=0; c<this.span; c++) {
 
+                    const elem = this.boardElement.children[b].children[r*this.span + c]
+
+                    if (gameState[b][r][c] == null) {
+                        elem.innerHTML = ""
+                    } else {
+                        elem.innerHTML = "•"
+                        elem.style.color = this.playerColours[gameState[b][r][c]]
+                    }
+                }
+            }
+        }
     }
 
-    getAvailableMoves () {
-
+    addPoint (board, row, col, player) {
+        this.boardElement.children[board].children[row*this.span + col].innerHTML = "•"
+        this.boardElement.children[board].children[row*this.span + col].style.color = this.playerColours[player]
     }
 
     renderPoints () {
 
     }
 
+    resetBoard () {
+        for (let b=0; b<this.span; b++) {
+            this.boardElement.children[board].children[r*this.span + c].innerHTML = ""
+        }
+    }
+
     // Highlight the column/row/vertical-column that will be affected by a move
     styleHoverPreview (board, row, col) {
 
-        if (!this.gravityEnabled) return
+        if (!this.gravityEnabled) {
+            return
+        }
 
         // Clear last highlighted tiles
         const existingHovered = this.boardElement.querySelectorAll(".hoveredTile")

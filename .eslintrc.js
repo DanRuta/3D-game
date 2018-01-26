@@ -8,6 +8,11 @@ module.exports = {
         "ecmaVersion": 2017
     },
     "rules": {
+        "indent": [
+            "error",
+            4,
+            {"SwitchCase": 1}
+        ],
         "quotes": [
             "error",
             "double"
