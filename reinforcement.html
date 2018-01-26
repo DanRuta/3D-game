@@ -174,7 +174,6 @@
             constructor (epsilon=0.2, alpha=0.3, gamma=0.9) {
 
                 super()
-                this.temp = 0
                 this.breed = "Qlearner"
                 this.q = {} // (state, action) - keys: Q values
                 this.epsilon = epsilon // e-greedy chance of random exploration
@@ -205,7 +204,7 @@
                 const actions = this.availableMoves(board)
 
                 if (Math.random() < this.epsilon) {
-                    const index = Math.floor(Math.random()*actions.length-1)
+                    const index = Math.floor(Math.random()*actions.length) // 1
                     this.lastMove = actions[index]
                     game.makeMove(this.lastMove)
                 }
@@ -260,7 +259,7 @@
         }
 
         const train = () => {
-            for (let i=0; i<200000; i++) {
+            for (let i=0; i<20000; i++) {
                 const t = new Game(p1, p2)
                 t.training = true
                 t.playGame()

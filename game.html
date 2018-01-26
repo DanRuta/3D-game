@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>game</title>
+    <script src="dist/game.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="dev/style.css">
+    <script>
+    "use strict"
+    window.addEventListener("load", () => {
+
+        let isRotating = false
+        let isRotatingTimeout
+
+        resetButton.addEventListener("click", () => {
+            content.innerHTML = ""
+
+            window.game = new GameLogic({
+                gravityEnabled: !placeAnywhereCheckbox.checked,
+                span: boardSizeDropdown.value,
+                players: numPlayersInput.value,
+                isTraining: false,
+                isMultiplayer: false
+            })
+            content.appendChild(game.board.boardElement)
+        })
+        resetButton.click()
+
+
+
+        // Rotate via mouse scroll
+        window.addEventListener("wheel", ({deltaY}) => {
+            isRotating = true
+            game.board.rotationValue += (deltaY > 0 ? 1 : -1) * 5
+            game.board.rotate()
+            isRotating = false
+        })
+    })
+
+    </script>
+</head>
+<body>
+
+    Player: <span id="playerNum">•</span><span id="winsDisplay"> wins</span>
+    <div id="tip">Scroll to rotate<br>Click arrows to change gravity</div>
+
+    <div id="options">
+
+        <div id="configs">
+            <div>
+                <span>Board Size:</span>
+                <div>
+                    <select id="boardSizeDropdown">
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                        <option value="7">7</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <span>Num Players:</span>
+                <div>
+
+                <input id="numPlayersInput" type="number" min="1" max="10" value="2"><br>
+                </div>
+            </div>
+
+            <div>
+                <span>Place anywhere:</span>
+                <div>
+                    <input id="placeAnywhereCheckbox" type="checkbox">
+                </div>
+            </div>
+            <div>
+                <span>AI opponent:</span>
+                <div>
+                    <input id="aiOpponentCheckbox" type="checkbox">
+                </div>
+            </div>
+            <br>
+
+            <button id="resetButton">Reset</button>
+        </div>
+
+
+        <div id="arrowsContainer">
+            <div id="flatArrowsContainer">
+                <div class="arrow" id="leftArrow">⇦</div>
+                <div class="arrow" id="forwardArrow">⇦</div>
+                <div class="arrow" id="backwardArrow">⇦</div>
+                <div class="arrow" id="rightArrow">⇦</div>
+            </div>
+            <div id="verticalArrowsContainer">
+                <div class="arrow" id="upArrow">⇧</div>
+                <div class="arrow selectedGravity" id="downArrow">⇩</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="content">
+        <div id="boardsContainer">
+        </div>
+    </div>
+
+</body>
+</html>

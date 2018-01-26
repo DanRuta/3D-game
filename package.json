@@ -1,20 +1,26 @@
 {
-  "name": "vrscribble",
+  "name": "game",
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
-  "author": "Dan Ruta",
+  "author": "",
   "license": "ISC",
   "scripts": {
     "start": "set NODE_ENV=production && node server.js",
     "devstart": "node server.js dev"
   },
   "devDependencies": {
-    "ws": "^1.1.0",
-    "node-fetch": "1.6.1",
-    "mime-types": "2.x.x",
-    "pug": "*",
     "eslint": "^4.11.0",
-    "redis": "2.6.x"
+    "grunt": "^1.0.1",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-concat": "^1.0.1",
+    "gruntify-eslint": "4.0.0",
+    "grunt-contrib-uglify-es": "git://github.com/gruntjs/grunt-contrib-uglify.git#harmony",
+    "grunt-contrib-watch": "^1.0.0",
+    "mime-types": "2.x.x",
+    "node-fetch": "1.6.1",
+    "pug": "*",
+    "redis": "2.6.x",
+    "ws": "^1.1.0"
   }
 }
