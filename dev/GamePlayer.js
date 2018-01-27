@@ -34,7 +34,7 @@ class GamePlayer {// eslint-disable-line
 
     getQ (state, action) {
 
-        const key = state.join("").replace(/,/g,"").replace(/0/g, "X").replace(/1/g, "O") + action
+        const key = state.join("").replace(/,/g,"").replace(/0/g, "X").replace(/1/g, "O") + action.toString().replace(/,/g, "")
 
         if (this.q[key]==undefined) {
             this.q[key] = 1
@@ -47,14 +47,17 @@ class GamePlayer {// eslint-disable-line
     getAvailableMoves (gameState) {
         const moves = []
 
-        for (let r=0; r<this.game.span; r++) {
-            for (let c=0; c<this.game.span; c++) {
-                if (Number.isNaN(parseInt(gameState[0][r][c]))) {
-                    moves.push(r*this.game.span + c)
+        for (let b=0; b<this.game.span; b++) {
+            for (let r=0; r<this.game.span; r++) {
+                for (let c=0; c<this.game.span; c++) {
+                    if (Number.isNaN(parseInt(gameState[b][r][c]))) {
+                        moves.push([b, r, c])
+                    }
                 }
             }
         }
 
+        // shuffle(moves)
         return moves
     }
 
@@ -70,7 +73,7 @@ class GamePlayer {// eslint-disable-line
         if (Math.random() < this.epsilon) {
             const index = Math.floor(Math.random() * moves.length)
             this.lastMove = moves[index]
-            this.game.makeMove(this.playerIndex, 0, parseInt(this.lastMove/this.game.span), this.lastMove%this.game.span)
+            this.game.makeMove(this.playerIndex, this.lastMove[0], this.lastMove[1], this.lastMove[2])
             return
         }
 
@@ -83,7 +86,7 @@ class GamePlayer {// eslint-disable-line
         const maxQ = qs.slice(0).sort().reverse()[0]
 
         this.lastMove = moves[qs.indexOf(maxQ)]
-        this.game.makeMove(this.playerIndex, 0, parseInt(this.lastMove/this.game.span), this.lastMove%this.game.span)
+        this.game.makeMove(this.playerIndex, this.lastMove[0], this.lastMove[1], this.lastMove[2])
     }
 
     reward (value, gameState) {
@@ -100,7 +103,7 @@ class GamePlayer {// eslint-disable-line
                 maxqNew = Math.max(maxqNew, this.getQ(gameState, aMoves[a]))
             }
 
-            const key = this.lastState.join("").replace(/,/g,"").replace(/0/g, "X").replace(/1/g, "O") + this.lastMove
+            const key = this.lastState.join("").replace(/,/g,"").replace(/0/g, "X").replace(/1/g, "O") + this.lastMove.toString().replace(/,/g, "")
             this.q[key] = prev + this.alpha * (value + this.gamma * maxqNew - prev)
         }
     }

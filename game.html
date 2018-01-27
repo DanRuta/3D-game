@@ -6,6 +6,16 @@
     <link rel="stylesheet" type="text/css" href="dev/style.css">
     <script>
     "use strict"
+
+    window.shuffle = arr => {
+        for (let i=arr.length; i; i--) {
+            const j = Math.floor(Math.random() * i)
+            const x = arr[i-1]
+            arr[i-1] = arr[j]
+            arr[j] = x
+        }
+    }
+
     window.addEventListener("load", () => {
 
         let isRotating = false
@@ -48,9 +58,9 @@
         })
 
         window.trainAI = () => {
-            game.trainAI({epochs: 20000})
+            game.gravityEnabled = false
+            game.trainAI({epochs: 50000, epsilon: 0.5})
         }
-
     })
 
     </script>

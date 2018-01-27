@@ -203,7 +203,6 @@ class GameLogic {// eslint-disable-line
 
         // Randomize who starts
         this.playerIndex = 0//Math.floor(Math.random()*players)
-
     }
 
     // Create the board brand new
@@ -275,7 +274,6 @@ class GameLogic {// eslint-disable-line
 
         // Player wins
         if (this.winningMove(b, r, c, p)) {
-            console.log("Player wins", p)
             this.players[p].reward(1, this.gameState)
             this.players.forEach((player, pi) => pi!=p && player.reward(-1, this.gameState))
             winsDisplay.style.display = "inline-block"
@@ -328,8 +326,7 @@ class GameLogic {// eslint-disable-line
         this.isTraining = false
         this.players[0] = new GamePlayer("local human", 0)
         this.players[1].epsilon = 0
-        this.playerIndex = 0//Math.random() < 0.5 ? 0 : 1
-        // this.players[this.playerIndex].pickMove(this.gameState)
+        this.playerIndex = 0
     }
 
     TEMPReset () {
@@ -388,22 +385,6 @@ class GameLogic {// eslint-disable-line
     }
 
     isFull () {
-
-        /*
-                Temporarily check only the first board, when training AI
-        */
-        if (this.isTraining || this.players[1].type == "AI") {
-            for (let r=0; r<this.span; r++) {
-                for (let c=0; c<this.span; c++) {
-                    if (this.gameState[0][r][c] === " ") {
-                        return false
-                    }
-                }
-            }
-            return true
-        }
-
-
         for (let b=0; b<this.span; b++) {
             for (let r=0; r<this.span; r++) {
                 for (let c=0; c<this.span; c++) {
@@ -658,7 +639,7 @@ class GamePlayer {// eslint-disable-line
 
     getQ (state, action) {
 
-        const key = state.join("").replace(/,/g,"").replace(/0/g, "X").replace(/1/g, "O") + action
+        const key = state.join("").replace(/,/g,"").replace(/0/g, "X").replace(/1/g, "O") + action.toString().replace(/,/g, "")
 
         if (this.q[key]==undefined) {
             this.q[key] = 1
@@ -671,14 +652,17 @@ class GamePlayer {// eslint-disable-line
     getAvailableMoves (gameState) {
         const moves = []
 
-        for (let r=0; r<this.game.span; r++) {
-            for (let c=0; c<this.game.span; c++) {
-                if (Number.isNaN(parseInt(gameState[0][r][c]))) {
-                    moves.push(r*this.game.span + c)
+        for (let b=0; b<this.game.span; b++) {
+            for (let r=0; r<this.game.span; r++) {
+                for (let c=0; c<this.game.span; c++) {
+                    if (Number.isNaN(parseInt(gameState[b][r][c]))) {
+                        moves.push([b, r, c])
+                    }
                 }
             }
         }
 
+        // shuffle(moves)
         return moves
     }
 
@@ -694,7 +678,7 @@ class GamePlayer {// eslint-disable-line
         if (Math.random() < this.epsilon) {
             const index = Math.floor(Math.random() * moves.length)
             this.lastMove = moves[index]
-            this.game.makeMove(this.playerIndex, 0, parseInt(this.lastMove/this.game.span), this.lastMove%this.game.span)
+            this.game.makeMove(this.playerIndex, this.lastMove[0], this.lastMove[1], this.lastMove[2])
             return
         }
 
@@ -707,7 +691,7 @@ class GamePlayer {// eslint-disable-line
         const maxQ = qs.slice(0).sort().reverse()[0]
 
         this.lastMove = moves[qs.indexOf(maxQ)]
-        this.game.makeMove(this.playerIndex, 0, parseInt(this.lastMove/this.game.span), this.lastMove%this.game.span)
+        this.game.makeMove(this.playerIndex, this.lastMove[0], this.lastMove[1], this.lastMove[2])
     }
 
     reward (value, gameState) {
@@ -724,7 +708,7 @@ class GamePlayer {// eslint-disable-line
                 maxqNew = Math.max(maxqNew, this.getQ(gameState, aMoves[a]))
             }
 
-            const key = this.lastState.join("").replace(/,/g,"").replace(/0/g, "X").replace(/1/g, "O") + this.lastMove
+            const key = this.lastState.join("").replace(/,/g,"").replace(/0/g, "X").replace(/1/g, "O") + this.lastMove.toString().replace(/,/g, "")
             this.q[key] = prev + this.alpha * (value + this.gamma * maxqNew - prev)
         }
     }
