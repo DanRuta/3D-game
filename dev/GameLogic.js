@@ -92,6 +92,14 @@ class GameLogic {// eslint-disable-line
 
         winsDisplay.style.display = "none"
         this.gameState = gameState
+
+        // Clear the AI players' lastState
+        for (let p=0; p<this.players.length; p++) {
+            if (this.players[p].type == "AI") {
+                this.players[p].clearLastState()
+            }
+        }
+
         return gameState
     }
 
@@ -241,7 +249,7 @@ class GameLogic {// eslint-disable-line
         /*
                 Temporarily check only the first board, when training AI
         */
-        if (this.isTraining) {
+        if (this.isTraining || this.players[1].type == "AI") {
             for (let r=0; r<this.span; r++) {
                 for (let c=0; c<this.span; c++) {
                     if (this.gameState[0][r][c] === " ") {

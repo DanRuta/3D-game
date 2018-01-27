@@ -235,6 +235,14 @@ class GameLogic {// eslint-disable-line
 
         winsDisplay.style.display = "none"
         this.gameState = gameState
+
+        // Clear the AI players' lastState
+        for (let p=0; p<this.players.length; p++) {
+            if (this.players[p].type == "AI") {
+                this.players[p].clearLastState()
+            }
+        }
+
         return gameState
     }
 
@@ -384,7 +392,7 @@ class GameLogic {// eslint-disable-line
         /*
                 Temporarily check only the first board, when training AI
         */
-        if (this.isTraining) {
+        if (this.isTraining || this.players[1].type == "AI") {
             for (let r=0; r<this.span; r++) {
                 for (let c=0; c<this.span; c++) {
                     if (this.gameState[0][r][c] === " ") {
@@ -637,6 +645,17 @@ class GamePlayer {// eslint-disable-line
         }
     }
 
+    clearLastState () {
+        for (let b=0; b<this.game.span; b++) {
+            for (let r=0; r<this.game.span; r++) {
+                for (let c=0; c<this.game.span; c++) {
+                    this.lastState[b][r][c] = " "
+                }
+            }
+        }
+        this.lastMove = undefined
+    }
+
     getQ (state, action) {
 
         const key = state.join("").replace(/,/g,"").replace(/0/g, "X").replace(/1/g, "O") + action
@@ -660,7 +679,6 @@ class GamePlayer {// eslint-disable-line
             }
         }
 
-        // console.log(moves.length, "getAvailableMoves")
         return moves
     }
 
