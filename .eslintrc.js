@@ -13,6 +13,9 @@ module.exports = {
             4,
             {"SwitchCase": 1}
         ],
+        "no-unused-vars": [
+            "error"
+        ],
         "quotes": [
             "error",
             "double"
@@ -41,9 +44,6 @@ module.exports = {
         ],
         "no-extra-parens": [
             "error"
-        ],
-        "capitalized-comments": [
-            1
         ],
         "comma-dangle": [
             "error",

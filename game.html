@@ -19,6 +19,7 @@
                 span: boardSizeDropdown.value,
                 players: numPlayersInput.value,
                 isTraining: false,
+                aiOpponent: aiOpponentCheckbox.checked,
                 isMultiplayer: false
             })
             content.appendChild(game.board.boardElement)
@@ -46,6 +47,9 @@
             })
         })
 
+        window.trainAI = () => {
+            game.trainAI({epochs: 20})
+        }
 
     })
 

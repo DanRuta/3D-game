@@ -1,12 +1,10 @@
 "use strict"
 
-const test = "stuff"
-
-class GameBoard {
+class GameBoard {// eslint-disable-line
 
     constructor (game) {
 
-        const {span, gameState, gravity, gravityEnabled} = game
+        const {span, gravity, gravityEnabled} = game
 
         this.playerColours = ["blue", "red", "green", "purple", "yellow", "brown", "black", "cyan", "pink", "darkgrey"]
         this.rotationValue = -45
@@ -70,7 +68,7 @@ class GameBoard {
 
                     const elem = this.boardElement.children[b].children[r*this.span + c]
 
-                    if (gameState[b][r][c] == null) {
+                    if (gameState[b][r][c] === " ") {
                         elem.innerHTML = ""
                     } else {
                         elem.innerHTML = "•"
@@ -92,7 +90,11 @@ class GameBoard {
 
     resetBoard () {
         for (let b=0; b<this.span; b++) {
-            this.boardElement.children[board].children[r*this.span + c].innerHTML = ""
+            for (let r=0; r<this.span; r++) {
+                for (let c=0; c<this.span; c++) {
+                    this.boardElement.children[b].children[r*this.span + c].innerHTML = ""
+                }
+            }
         }
     }
 
