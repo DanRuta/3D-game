@@ -1,14 +1,15 @@
 "use strict"
 
-let sendData, returnError, redis, redisPub, redisSub, websocketClients=[], keys
+let sendData, returnError, websocketClients=[], keys
 
 const fs = require("fs")
 const pug = require("pug")
-const util = require("util")
 const fetch = require("node-fetch")
-const exec = require("child_process").exec
+const {ServerAI} = require("./serverside/ServerAI.js")
 
-const FBtemplate = "./template.jpg"
+// The size of this file is gonna get out of hand; we will need to store the data in a database, or something
+console.log("Loading AI weights...")
+const AI = new ServerAI(JSON.parse(fs.readFileSync("weights40000.json")))
 
 try {
     keys = JSON.parse(fs.readFileSync("./keys.json"))
@@ -72,6 +73,20 @@ const userArea = (request, response) => {
 
 // POST
 // ====
+const getAIMove = (request, response, {gameState}) => {
+    console.log("getAIMove gameState", gameState)
+    const move = AI.pickMove(gameState)
+    console.log("move", move)
+    sendData({request, response, code: 200, data: JSON.stringify({move})})
+}
+
+const rewardAI = (request, response, {value, gameState}) => {
+    AI.reward(value, gameState)
+    sendData({request, response, code: 204})
+}
+
+
+
 const roomExists = (request, response, {roomName}) => {
     sendData({request, response, code: 200, data: JSON.stringify({roomExists: rooms.includes(roomName), roomName}), contentType: "text/plain"})
 }
@@ -306,7 +321,7 @@ const authenticateUser = (token, authenticator, callback) => {
 }
 
 // Export routes to these functions to the server
-exports.initProject = ({sendDataCallback, error, r, rPub, rSub}) => {
+exports.initProject = ({sendDataCallback, error}) => {
     sendData = sendDataCallback
     returnError = error
 
@@ -321,6 +336,9 @@ exports.initProject = ({sendDataCallback, error, r, rPub, rSub}) => {
             [/users\/[^\/]+$/] : userArea
         },
         post: {
+            [/getAIMove/] : getAIMove,
+            [/rewardAI/] : rewardAI,
+
             [/roomExists/] : roomExists,
             [/createRoom/] : createRoom,
             [/createEditRoom/] : createEditRoom,

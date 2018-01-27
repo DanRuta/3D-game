@@ -141,3 +141,5 @@ class GameBoard {// eslint-disable-line
     }
 
 }
+
+typeof window!="undefined" && (window.exports = window.exports || {})

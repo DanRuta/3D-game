@@ -35,12 +35,10 @@ class GameLogic {// eslint-disable-line
         }
 
         this.board = new GameBoard(this)
-        playerNum.style.color = this.board.playerColours[this.playerIndex]
-
 
         // Set the first player to either AI or human (aka the actual player)
         if (this.aiOpponent) {
-            this.players.push(new GamePlayer("AI", 0, this, {epsilon, alpha, gamma}))
+            this.players.push(new GamePlayer("AI", 0, this))
         } else {
             this.players.push(new GamePlayer("local human", 0))
         }
@@ -50,7 +48,7 @@ class GameLogic {// eslint-disable-line
 
             // TODO, disallow more than 1 other player when playing against AI - model needed would be too big
             if (this.isTraining) {
-                this.players.push(new GamePlayer("AI", p, this, {epsilon, alpha, gamma}))
+                this.players.push(new GamePlayer("AI", p, this))
             } else if (isMultiplayer) {
                 this.players.push(new GamePlayer("remote human", p))
             } else {
@@ -59,7 +57,9 @@ class GameLogic {// eslint-disable-line
         }
 
         // Randomize who starts
-        this.playerIndex = 0//Math.floor(Math.random()*players)
+        this.playerIndex = Math.floor(Math.random()*players)
+        playerNum.style.color = this.board.playerColours[this.playerIndex]
+        this.players[this.playerIndex].pickMove(this.gameState)
     }
 
     // Create the board brand new
@@ -130,7 +130,7 @@ class GameLogic {// eslint-disable-line
         this.board.addPoint(b, r, c, p)
 
         // Player wins
-        if (this.winningMove(b, r, c, p)) {
+        if (this.isWinningMove(b, r, c, p)) {
             this.players[p].reward(1, this.gameState)
             this.players.forEach((player, pi) => pi!=p && player.reward(-1, this.gameState))
             winsDisplay.style.display = "inline-block"
@@ -157,42 +157,7 @@ class GameLogic {// eslint-disable-line
         this.players[this.playerIndex].pickMove(this.gameState)
     }
 
-    trainAI ({epsilon, alpha, gamma, epochs=20000}={}) {
-
-        this.span = 3
-        this.players = []
-        this.players.push(new GamePlayer("AI", 0, this, {epsilon, alpha, gamma}))
-        this.players.push(new GamePlayer("AI", 1, this, {epsilon, alpha, gamma}))
-        this.resetGame()
-        this.isTraining = true
-
-        let totalEpochs = 0
-
-        while (totalEpochs < epochs) {
-
-            // Randomize who starts, to train both cases
-            this.playerIndex = Math.random() < 0.5 ? 1 : 0
-
-            this.players[this.playerIndex].pickMove(this.gameState)
-
-            totalEpochs++
-            this.resetGame()
-        }
-
-        console.log("Training finished", Object.keys(this.players[0].q).length, Object.keys(this.players[1].q).length)
-        this.isTraining = false
-        this.players[0] = new GamePlayer("local human", 0)
-        this.players[1].epsilon = 0
-        this.playerIndex = 0
-    }
-
-    TEMPReset () {
-        this.resetGame()
-        this.playerIndex = Math.random() < 0.5 ? 1 : 0
-        this.players[this.playerIndex].pickMove(this.gameState)
-    }
-
-    winningMove (boardIndex, tileY, tileX, player) {
+    isWinningMove (boardIndex, tileY, tileX, player) {
 
         let match = false
         const max = this.gameState[0].length-1
@@ -438,7 +403,7 @@ class GameLogic {// eslint-disable-line
                 for (let c=0; c<this.span; c++) {
 
                     if (this.gameState[b][r][c] !== " ") {
-                        match = match || this.winningMove(b, r, c, this.gameState[b][r][c])
+                        match = match || this.isWinningMove(b, r, c, this.gameState[b][r][c])
                         if (match) {
                             player = this.gameState[b][r][c]
                             break
@@ -460,3 +425,6 @@ class GameLogic {// eslint-disable-line
     }
 
 }
+
+typeof window!="undefined" && (window.GameLogic = GameLogic)
+exports.GameLogic = GameLogic

@@ -1,3 +1,4 @@
 node_modules
 usersData.json
 keys.json
+weights*.json
