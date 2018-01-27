@@ -72,12 +72,12 @@ const error = (response, code, e) => {
 
     // Replace with server-side rendering of an error page
     response.writeHead(code, {"Content-Type": "text/html"})
-    response.end(pug.renderFile("errorPage.pug", {code, codeDetails: http.STATUS_CODES[code]}))
+    response.end(code + " " + http.STATUS_CODES[code])
 }
 
 
 
-const vrScribble = require("./vrscribble.js").initProject({sendDataCallback: sendData, error})
+const game = require("./game.js").initProject({sendDataCallback: sendData, error})
 
 /*
     NOTE:
@@ -87,18 +87,18 @@ const vrScribble = require("./vrscribble.js").initProject({sendDataCallback: sen
 */
 
 // Insert the project name into the start of each regex route
-for (let getRoute in vrScribble.get) {
-    vrScribble.get["/^\\/"+getRoute.slice(1,getRoute.length)] = vrScribble.get[getRoute]
-    delete vrScribble.get[getRoute]
+for (let getRoute in game.get) {
+    game.get["/^\\/"+getRoute.slice(1,getRoute.length)] = game.get[getRoute]
+    delete game.get[getRoute]
 }
 
-for (let postRoute in vrScribble.post) {
-    vrScribble.post["/^\\/"+postRoute.slice(1,postRoute.length)] = vrScribble.post[postRoute]
-    delete vrScribble.post[postRoute]
+for (let postRoute in game.post) {
+    game.post["/^\\/"+postRoute.slice(1,postRoute.length)] = game.post[postRoute]
+    delete game.post[postRoute]
 }
 
-getHandlers.push(vrScribble.get)
-postHandlers.push(vrScribble.post)
+getHandlers.push(game.get)
+postHandlers.push(game.post)
 
 
 // Compile all the request handlers
@@ -219,6 +219,6 @@ wsServers.forEach(wss => {
             return {clients: prev.clients.concat(curr.clients)}
         }, {clients: []})
 
-        vrScribble.ws(connection, clients.clients)
+        game.ws(connection, clients.clients)
     })
 })

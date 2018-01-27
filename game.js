@@ -9,8 +9,6 @@ const fetch = require("node-fetch")
 const exec = require("child_process").exec
 
 const FBtemplate = "./template.jpg"
-const spotlightImageNames = fs.readdirSync("./spotlight/").filter(file => file.endsWith(".jpg"))
-const spotlightImages = spotlightImageNames.map(imageName => new Buffer(fs.readFileSync("./spotlight/"+imageName)).toString("base64"))
 
 try {
     keys = JSON.parse(fs.readFileSync("./keys.json"))
@@ -25,17 +23,7 @@ let usersData = []
 // GET
 // ===
 const index = (request, response) => {
-
-    const randomImageIndex = Math.floor(Math.random()*spotlightImages.length)
-    const spotlightData = spotlightImageNames[randomImageIndex].split(".")[0].split("-")
-
-    sendData({request, response, code: 200, data: pug.renderFile("./index.pug", {
-        googleClientId,
-        spotlightImageBase64: spotlightImages[randomImageIndex],
-        spotlightUsername : usersData[spotlightData[0]].username,
-        spotlightUsernameUrl : usersData[spotlightData[0]].username.toLowerCase().replace(/\s/g, "-"),
-        spotlightIndex : spotlightData[1]
-    }), contentType: "text/html"})
+    sendData({request, response, code: 200, data: fs.readFileSync("game.html", "utf8"), contentType: "text/html"})
 }
 
 const viewer = (request, response) => {
