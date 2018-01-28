@@ -22,5 +22,8 @@
     "pug": "*",
     "redis": "2.6.x",
     "ws": "^1.1.0"
+  },
+  "dependencies": {
+    "mongodb": "^2.2.33"
   }
 }

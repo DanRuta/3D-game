@@ -6,10 +6,12 @@ const fs = require("fs")
 const pug = require("pug")
 const fetch = require("node-fetch")
 const {ServerAI} = require("./serverside/ServerAI.js")
+const db = require('./game-MongoDB')
 
 // The size of this file is gonna get out of hand; we will need to store the data in a database, or something
 console.log("Loading AI weights...")
-const AI = new ServerAI(JSON.parse(fs.readFileSync("weights40000.json")))
+const AI = new ServerAI(JSON.parse(fs.readFileSync("weights20000.json")))
+
 
 try {
     keys = JSON.parse(fs.readFileSync("./keys.json"))
@@ -73,7 +75,9 @@ const userArea = (request, response) => {
 
 // POST
 // ====
-const getAIMove = (request, response, {gameState}) => {
+const getAIMove = async(request, response, {gameState}) => {
+    console.log(await db.getRooms())
+  
     console.log("getAIMove gameState", gameState)
     const move = AI.pickMove(gameState)
     console.log("move", move)
@@ -91,19 +95,25 @@ const roomExists = (request, response, {roomName}) => {
     sendData({request, response, code: 200, data: JSON.stringify({roomExists: rooms.includes(roomName), roomName}), contentType: "text/plain"})
 }
 
-const createRoom = (request, response, {roomName}) => {
+const createRoom = async(request, response, {roomName}) => {
 
     let responseData
 
-    if (!rooms.includes(roomName)) {
-        rooms.push(roomName)
-        responseData = roomName
+//    if (!rooms.includes(roomName)) {
+//        rooms.push(roomName)
+//        responseData = roomName
+//    }
+    let roomExists = await db.getRoom(roomName);
+    
+    if(roomExists === []) {
+      let room = await db.createRoom(roomName)
+      responseData = roomName;
     }
 
     sendData({request, response, code: 200, data: JSON.stringify({roomName: responseData}), contentType: "text/plain"})
 }
 
-const createEditRoom = (request, response, {roomName}) => {
+const createEditRoom = async(request, response, {roomName}) => {
 
     let responseData, counter
 
@@ -117,7 +127,7 @@ const createEditRoom = (request, response, {roomName}) => {
     sendData({request, response, code: 200, data: JSON.stringify({roomName: responseData}), contentType: "text/plain"})
 }
 
-const tokenSignin = (request, response, {authenticator, token, roomName}) => {
+const tokenSignin = async (request, response, {authenticator, token, roomName}) => {
 
     let roomExists
 
@@ -183,7 +193,6 @@ const tokenSignin = (request, response, {authenticator, token, roomName}) => {
             // Add new user to the user data
             usersData[userId] = newUserData
         }
-
         fs.writeFile("./usersData.json", JSON.stringify(usersData, null, 4),()=>{})
 
         const finishAndSend = () => sendData({request, response, code: 200, data: JSON.stringify({username, userId, newUser, roomExists})})
