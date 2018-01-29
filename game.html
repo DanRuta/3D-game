@@ -115,6 +115,8 @@
 
                     hoveredObject = intersects[0].object.name.toLowerCase().startsWith("box") ? intersects[0].object.parent : intersects[0].object
 
+                    document.body.style.cursor = "pointer"
+
                     if (hoveredObject == clickedObject) {
                         // do nothing
                     } else {
@@ -145,6 +147,7 @@
                     }
 
                 } else {
+                    document.body.style.cursor = "default"
                     if (arrowModels) {
                         arrowModels.forEach(arrow => {
 
