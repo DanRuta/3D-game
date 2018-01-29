@@ -8,7 +8,8 @@
     <meta charset="utf8"/>
     <script>
     "use strict"
-
+    let ws;
+    let roomNameValue;
     window.addEventListener("load", () => {
 
         let isRotating = false
@@ -28,6 +29,10 @@
                 isMultiplayer: false
             })
             content.appendChild(game.board.boardElement)
+            if(roomName.value.trim() !== ""){
+              roomNameValue = roomName.value.trim() 
+              connectWebSockets()
+            }
         })
         resetButton.click()
 
@@ -131,7 +136,19 @@
                             hoveredObject.children.forEach(c => c.material.emissive.setHex(CYAN))
                             clickedObject = hoveredObject
                             console.log("clicked", arrowNames[clickedObject.data.arrowIndex])
-                            game.shiftGravity(arrowNames[clickedObject.data.arrowIndex])
+                            if(ws){
+                                ws.send(
+                                    JSON.stringify(
+                                        {   direction: arrowNames[clickedObject.data.arrowIndex],
+                                            userId: "1234", 
+                                            username: "rob",
+                                            type: "text", 
+                                            room: roomNameValue,
+                                            type: "gravity"}))
+                    
+                            } else {
+                                game.shiftGravity(arrowNames[clickedObject.data.arrowIndex])
+                            }
                         } else {
                             // Hovering over non clicked item without the mouse down
                             arrowModels.forEach(arrow => {
@@ -204,6 +221,35 @@
 
     })
 
+    function connectWebSockets(roomName) {
+         ws =  new WebSocket("ws://vrscrible.localhost:8000/" + roomName)
+        
+        ws.addEventListener("message", (message) => {
+            const data = JSON.parse(message.data)
+            console.log(data)
+            
+            if(data.type === "gravity") {
+                game.shiftGravity(data.direction)
+                
+            } else if(data.type === "move") {
+
+                
+                let player = data.playerIndex;
+                let b = data.b;
+                let r = data.r;
+                let c = data.c;
+                console.log(player, b, r, c)
+                game.makeMove(player, b, r, c)
+            }
+          })
+
+          ws.addEventListener("open", () => {
+            console.log("connect ws")
+            ws.send(JSON.stringify({userId: "1234", username: "rob", type: "text", room: roomNameValue }))
+          })
+        
+    }
+
     </script>
 </head>
 <body>
@@ -222,6 +268,12 @@
                         <option value="5">5</option>
                         <option value="7">7</option>
                     </select>
+                </div>
+            </div>
+            <div>
+                <span>Room ID:</span>
+                <div>
+                    <input id="roomName" type="text">
                 </div>
             </div>
 
