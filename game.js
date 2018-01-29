@@ -254,7 +254,7 @@ const handleWebSocket = (connection, clients) => {
             }
 
             websocketClients.forEach(client => {
-                if (client.meta && client.meta.room == connection.meta.room && client.meta.type=="viewer") {
+                if (client.meta && client.meta.room == connection.meta.room) {
                     client.send(JSON.stringify(message))
                 }
             })

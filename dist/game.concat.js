@@ -46,7 +46,25 @@ class GameBoard {// eslint-disable-line
                 for (let c=0; c<this.span; c++) {
                     const tile = document.createElement("div")
 
-                    tile.addEventListener("click", () => game.makeMove(game.playerIndex, b, r, c))
+                    tile.addEventListener("click", () =>  {
+                        if (ws){
+                            ws.send(
+                                JSON.stringify(
+                                    {playerIndex: game.playerIndex, 
+                                        b: b, 
+                                        r: r,   
+                                        c: c,
+                                        userId: "1234", 
+                                        username: "rob",
+                                        type: "text", 
+                                        room: roomNameValue,
+                                        type: "move"}))
+                            
+                        } else {
+                            game.makeMove(game.playerIndex, b, r, c)
+                        }
+                    })
+                    
                     tile.addEventListener("mouseover", () => this.styleHoverPreview(b, r, c))
 
                     board.appendChild(tile)
