@@ -85,58 +85,9 @@ body {
     background-color: rgba(255, 255, 255, 0.8);
     cursor: pointer;
 }
-#arrowsContainer {
-    margin-left: 10px;
-    perspective: 1000px;
-    user-select: none;
-}
-
-#flatArrowsContainer {
-    display: inline-grid;
-    grid-template-columns: 100px 100px;
-    grid-template-rows: 100px 100px;
-    transform: rotateX(50deg) rotateZ(-90deg);
-}
-#verticalArrowsContainer {
-    margin-top: -200px;
-    margin-left: 50px;
- }
-
-#flatArrowsContainer > div:first-child {
-    transform: rotate(45deg);
-}
-
-#flatArrowsContainer > div:nth-child(2) {
-    transform: rotate(135deg);
-}
-
-#flatArrowsContainer > div:nth-child(3) {
-    transform: rotate(315deg);
-}
-
-#flatArrowsContainer > div:last-child {
-    transform: rotate(225deg);
-}
-
-#flatArrowsContainer > div, #verticalArrowsContainer > div {
-    height: 100px;
-    width: 100px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 100pt;
-    color: #555;
-    cursor: pointer;
-}
-#flatArrowsContainer > div:hover, #verticalArrowsContainer > div:hover {
-    color: #DD6;
-}
-.selectedGravity {
-    color: #4DD !important;
-}
-#verticalArrowsContainer > div:first-child {
-    z-index: 1000;
-    position: relative;
+#arrowsCanvas {
+    margin-left: -50px;
+    margin-top: -50px;
 }
 .hoveredTile {
     background-color: rgba(255, 255, 255, 0.8);

@@ -42,9 +42,6 @@ class GameBoard {// eslint-disable-line
             board.style.transform = `rotateX(${this.tiltValue}deg) rotateZ(${this.rotationValue}deg)`
             board.style.marginTop = this.span==7 ? "-70%" : "-50%"
 
-            // TODO, move this out of here
-            flatArrowsContainer.style.transform = `rotateX(${this.tiltValue+30}deg) rotateZ(${this.rotationValue-45}deg)`
-
             for (let r=0; r<this.span; r++) {
                 for (let c=0; c<this.span; c++) {
                     const tile = document.createElement("div")
@@ -136,7 +133,6 @@ class GameBoard {// eslint-disable-line
     rotate () {
         Array.from(this.boardElement.children).forEach(board => {
             board.style.transform = `rotateX(${this.tiltValue}deg) rotateZ(${this.rotationValue}deg)`
-            flatArrowsContainer.style.transform = `rotateX(${this.tiltValue+30}deg) rotateZ(${this.rotationValue-45}deg)`
         })
     }
 

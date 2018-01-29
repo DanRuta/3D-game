@@ -21,9 +21,8 @@
         const WHITE = 0x555555
         const YELLOW = 0xaaaa00
         const CYAN = 0x00aaaa
-        let radius = 5
 
-        const renderer = new THREE.WebGLRenderer({alpha: true, antiAliasing: true})
+        const renderer = new THREE.WebGLRenderer({alpha: true, antialias: true})
         renderer.setPixelRatio( window.devicePixelRatio )
         renderer.setSize(window.innerWidth, window.innerHeight)
         document.body.appendChild(renderer.domElement)
@@ -145,6 +144,7 @@
         document.addEventListener("mousemove", event => {
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1
             mouse.y = - (event.clientY / window.innerHeight) * 2 + 1
+            console.log(mouse.x, mouse.y)
         }, false)
 
         document.addEventListener("mousedown", () => mouseIsDown = true)
@@ -153,8 +153,8 @@
 
 
         const setRotation = rotation => {
-            camera.position.x = Math.sin(rotation*Math.PI/180) * 4
-            camera.position.z = Math.cos(rotation*Math.PI/180) * 4
+            camera.position.x = Math.sin(rotation*Math.PI/180) * 2
+            camera.position.z = Math.cos(rotation*Math.PI/180) * 2
         }
         setRotation(45)
 
