@@ -1,3 +1,4 @@
+"use strict"
 const url = 'mongodb://localhost:27017/game'
 const MongoClient = require('mongodb').MongoClient
 const assert = require('assert')
@@ -17,49 +18,101 @@ const connectDB = testing => {
 
             if(testing){
                 console.log("connected to db")
-                db.close()            
+                db.close()
                 resolve({message: "Conencted to db"})
-            }else 
+            }else
                 resolve(db)
         })
     })
 }
+
+/** AI Stuff **/
+module.exports.getQ = async (key) => {
+  const db = await connectDB()
+
+  const q = db.collection("q")
+  const result = await q.find({key}, {value: 1, _id: 0}).toArray()
+  return result
+}
+
+module.exports.setQ = async (key, value) => {
+  const db = await connectDB()
+
+  const q = db.collection("q")
+  const result = await q.insert({key, value})
+  return result
+}
+
+module.exports.setManyQ = async (records) => {
+  const db = await connectDB()
+
+  const q = db.collection("q")
+  const result = await q.insertMany(records)
+  return result
+}
+
+// careful with this (millions of records)
+module.exports.getAllQ = async () => {
+  const db = await connectDB()
+
+  const q = db.collection("q")
+  const result = await q.find({}).toArray()
+  return result
+}
+
+module.exports.deleteAllQ = async () => {
+  const db = await connectDB()
+
+  const q = db.collection("q")
+  const result = q.deleteMany({})
+  return result
+}
+
+// module.exports.updateQ = async (key, value) => {
+//   const db = await connectDB()
+
+//   const q = db.collection("q")
+//   const result = await q.insert({key, value})
+//   return result
+// }
+/** end AI Stuff **/
+
 
 /** Room Stuff **/
 module.exports.getRooms = async() => {
 
   const db = await connectDB()
 
-  room = db.collection("room")
+  const room = db.collection("room")
   let result = await room.find({}).toArray()
-  return result  
+  return result
 };
 
 module.exports.getRoom = async(id) => {
   const db = await connectDB()
-  
+
   const room = db.collection("room")
   let result = await room.find({room: id}).toArray()
-  
-  return result  
+
+  return result
 };
 
 module.exports.createRoom = async(id) => {
   const db = await connectDB()
-  
+
   const room = db.collection("room")
   let result = await room.insert({room: id, data: ""})
-  
-  return result  
+
+  return result
 };
 
 module.exports.updateRoom = async(id, data) => {
   const db = await connectDB()
-  
+
   const room = db.collection("room")
   let result = await room.insert({room: id, data: data})
-  
-  return result  
+
+  return result
 };
 /** end room Stuff **/
 
@@ -71,7 +124,7 @@ module.exports.getUsers = async() => {
 
   let user = db.collection("user")
   let result = await user.find({}).toArray()
-  return result  
+  return result
 };
 
 module.exports.getUser = async(id) => {
@@ -80,19 +133,17 @@ module.exports.getUser = async(id) => {
 
   let user = db.collection("user")
   let result = await user.find({}).toArray()
-  return result  
+  return result
 };
 
 module.exports.createUser = async(data) => {
   const db = await connectDB()
-  
+
   const user = db.collection("user")
   let result = await user.insert([data])
-  
-  return result  
+
+  return result
 };
 
 
 /** end user Stuff **/
-
-

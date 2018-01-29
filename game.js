@@ -5,13 +5,7 @@ let sendData, returnError, websocketClients=[], keys
 const fs = require("fs")
 const pug = require("pug")
 const fetch = require("node-fetch")
-const {ServerAI} = require("./serverside/ServerAI.js")
-const db = require('./game-MongoDB')
-
-// The size of this file is gonna get out of hand; we will need to store the data in a database, or something
-console.log("Loading AI weights...")
-const AI = new ServerAI(JSON.parse(fs.readFileSync("weights200000.json")))
-
+const db = require("./game-MongoDB")
 
 try {
     keys = JSON.parse(fs.readFileSync("./keys.json"))
@@ -69,18 +63,35 @@ const userArea = (request, response) => {
 
 // POST
 // ====
-const getAIMove = async(request, response, {gameState}) => {
-    console.log("getAIMove gameState", gameState)
+const getAIMove = async (request, response, {gameState}) => {
 
-    const move = AI.pickMove(gameState)
-    console.log("move", move)
+    const moves = getAvailableMoves(gameState)
+    const queries = []
+    const key = gameState.join("").replace(/,/g,"")
 
-    sendData({request, response, code: 200, data: JSON.stringify({move})})
+    // TODO, batch these queries
+    for (let m=0; m<moves.length; m++) {
+        queries.push(db.getQ(key + moves[m].toString().replace(/,/g, "")))
+    }
+
+    Promise.all(queries).then((qs, qi) => {
+        qs = qs.map(record => {
+
+            if (record.length) {
+                return record[0].value
+            } else {
+                db.setQ(key + moves[qi].toString().replace(/,/g, ""), 1)
+                return 1
+            }
+        })
+        const maxQ = qs.slice(0).sort().reverse()[0]
+
+        sendData({request, response, code: 200, data: JSON.stringify({move: moves[qs.indexOf(maxQ)]})})
+    })
 }
 
 const rewardAI = (request, response, {value, gameState}) => {
     // TODO, lastState+lastMove
-    AI.reward(value, gameState)
     sendData({request, response, code: 200, data: "{}"})
 }
 
@@ -313,7 +324,6 @@ const handleWebSocket = (connection, clients) => {
 // Helper Functions
 // ================
 const authenticateUser = (token, authenticator, callback) => {
-
     fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`)
     .then(googleResponse => googleResponse.json())
     .then(({aud,name,sub,email,picture}) => {
@@ -322,6 +332,27 @@ const authenticateUser = (token, authenticator, callback) => {
             callback({id: sub, name, email, picture})
         }
     })
+}
+
+const getAvailableMoves = gameState => {
+    const moves = []
+    const span = gameState[0].length
+
+    console.log("checking", gameState, span)
+
+    // for (let b=0; b<span; b++) {
+        for (let r=0; r<span; r++) {
+            for (let c=0; c<span; c++) {
+                // if (Number.isNaN(parseInt(gameState[b][r][c]))) {
+                if (Number.isNaN(parseInt(gameState[0][r][c]))) {
+                    // moves.push([b, r, c])
+                    moves.push([0, r, c])
+                }
+            }
+        }
+    // }
+
+    return moves
 }
 
 // Export routes to these functions to the server

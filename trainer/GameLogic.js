@@ -121,7 +121,7 @@ class GameLogic {// eslint-disable-line
                 this.resetGame()
             }
 
-            if (!this.isTraining) this.TEMPReset()
+            if (!this.isTraining) this.TEMPReset(this.useDB)
 
             return
         }
@@ -136,7 +136,7 @@ class GameLogic {// eslint-disable-line
             this.players[p].reward(1, this.gameState)
             this.players.forEach((player, pi) => pi!=p && player.reward(-1, this.gameState))
             winsDisplay.style.display = "inline-block"
-            if (!this.isTraining) this.TEMPReset()
+            if (!this.isTraining) this.TEMPReset(this.useDB)
             return
         }
 
@@ -144,7 +144,7 @@ class GameLogic {// eslint-disable-line
         if (this.isFull()) {
             console.log("Tied game")
             this.players.forEach(player => player.reward(0.25, this.gameState))
-            if (!this.isTraining) this.TEMPReset()
+            if (!this.isTraining) this.TEMPReset(this.useDB)
 
             return
         }
@@ -187,12 +187,13 @@ class GameLogic {// eslint-disable-line
 
         console.log("Training finished", Object.keys(this.players[0].q).length, Object.keys(this.players[1].q).length)
         this.isTraining = false
-        this.players[0] = new GamePlayer("local human", 0)
-        this.players[1].epsilon = 0
+        this.players[1] = new GamePlayer("local human", 0)
+        this.players[0].epsilon = 0
         this.playerIndex = 0
     }
 
-    TEMPReset () {
+    TEMPReset (useDB) {
+        this.useDB = useDB
         this.resetGame()
         this.playerIndex = Math.random() < 0.5 ? 1 : 0
         this.board.render(this.gameState)

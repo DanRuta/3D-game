@@ -6,9 +6,9 @@ const fs = require("fs")
 const args = process.argv.slice(2, 12)
 const {GameLogic} = require("./serverside/GameLogic.js")
 const {GamePlayer} = require("./serverside/GamePlayer.js")
+const db = require("./game-MongoDB")
 
-let existingData
-existingData = JSON.parse(fs.readFileSync("./weights200000.json"))
+let doTraining = true
 let reader
 let epsilon = 0.5
 let epochs = 2000
@@ -66,24 +66,33 @@ global.game = new GameLogic({
     aiOpponent: true,
     gravityEnabled: false
 })
+game.db = db
 
-if (!existingData) {
-    // const start = Date.now()
-    // game.trainAI({epochs, epsilon})
-    // console.log(`Training duration: ${Date.now() - start}`)
+if (doTraining) {
+    const start = Date.now()
+    game.trainAI({epochs, epsilon})
+    console.log(`Training duration: ${Date.now() - start}`)
 
-    // console.log("Saving weights to file...")
-    // fs.writeFile(`./weights${epochs}.json`, JSON.stringify(game.players[1].q), (err) => {
-    //     if (err) {
-    //         console.log("\x1b[33mError writing weights file\x1b[0m")
-    //     } else {
-    //         console.log("Weights saved")
-    //     }
-    // })
+    console.log("Saving weights to db...")
+    const keys = Object.keys(game.players[0].q)
 
-    // game.TEMPReset()
+    const qs = []
+
+    for (let k=0; k<keys.length; k++) {
+        qs[k] = {key: keys[k], value: game.players[0].q[keys[k]]}
+    }
+
+    db.setManyQ(qs)
+    game.TEMPReset(true)
 
 } else {
-    game.players[1].q = existingData
-    game.TEMPReset()
+    // db.deleteAllQ()
+
+    db.getAllQ().then(data => {
+
+        console.log("data.length", data.length)
+
+        game.players[1].q = data
+        game.TEMPReset(true)
+    })
 }

@@ -21,9 +21,7 @@
     "node-fetch": "1.6.1",
     "pug": "*",
     "redis": "2.6.x",
+    "mongodb": "^2.2.33",
     "ws": "^1.1.0"
-  },
-  "dependencies": {
-    "mongodb": "^2.2.33"
   }
 }
