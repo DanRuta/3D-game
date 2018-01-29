@@ -4,9 +4,9 @@
 global.readline = require("readline")
 const fs = require("fs")
 const args = process.argv.slice(2, 12)
-const {GameLogic} = require("./serverside/GameLogic.js")
-const {GamePlayer} = require("./serverside/GamePlayer.js")
-const db = require("./game-MongoDB")
+const {GameLogic} = require("./GameLogic.js")
+const {GamePlayer} = require("./GamePlayer.js")
+const db = require("../game-MongoDB")
 
 let doTraining = true
 let reader
@@ -23,6 +23,11 @@ for (let a=0; a<args.length; a++) {
 
         case "-i":
             epochs = parseInt(args[a+1])
+            a++
+            break
+
+        case "-t":
+            doTraining = args[a+1].trim().toLowerCase()=="y"
             a++
             break
 
