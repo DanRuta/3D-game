@@ -76,8 +76,13 @@ const userArea = (request, response) => {
 // POST
 // ====
 const getAIMove = async(request, response, {gameState}) => {
-    console.log(await db.getRooms())
-  
+   console.log(await db.createUser({
+        "id": "0",
+        "username": "test16",
+        "authUserID": "116044656790297454492",
+        "email": "up723318@myport.ac.uk",
+        "timesLoggedIn": 7
+    }))
     console.log("getAIMove gameState", gameState)
     const move = AI.pickMove(gameState)
     console.log("move", move)

@@ -37,9 +37,8 @@ module.exports.getRooms = async() => {
 
 module.exports.getRoom = async(id) => {
   const db = await connectDB()
-  assert.equal(null, dbs, "unable to connect to Database")
   
-  const room = dbs.collection("room")
+  const room = db.collection("room")
   let result = await room.find({room: id}).toArray()
   
   return result  
@@ -47,9 +46,8 @@ module.exports.getRoom = async(id) => {
 
 module.exports.createRoom = async(id) => {
   const db = await connectDB()
-  assert.equal(null, dbs, "unable to connect to Database")
   
-  const room = dbs.collection("room")
+  const room = db.collection("room")
   let result = await room.insert({room: id, data: ""})
   
   return result  
@@ -57,13 +55,44 @@ module.exports.createRoom = async(id) => {
 
 module.exports.updateRoom = async(id, data) => {
   const db = await connectDB()
-  assert.equal(null, dbs, "unable to connect to Database")
   
-  const room = dbs.collection("room")
+  const room = db.collection("room")
   let result = await room.insert({room: id, data: data})
   
   return result  
 };
 /** end room Stuff **/
+
+/** user Stuff **/
+
+module.exports.getUsers = async() => {
+
+  const db = await connectDB()
+
+  let user = db.collection("user")
+  let result = await user.find({}).toArray()
+  return result  
+};
+
+module.exports.getUser = async(id) => {
+
+  const db = await connectDB()
+
+  let user = db.collection("user")
+  let result = await user.find({}).toArray()
+  return result  
+};
+
+module.exports.createUser = async(data) => {
+  const db = await connectDB()
+  
+  const user = db.collection("user")
+  let result = await user.insert([data])
+  
+  return result  
+};
+
+
+/** end user Stuff **/
 
 
