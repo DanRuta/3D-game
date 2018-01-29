@@ -39,8 +39,8 @@ class GameLogic {// eslint-disable-line
 
 
         // Set the first player to either AI or human (aka the actual player)
-        if (this.aiOpponent) {
-            this.players.push(new GamePlayer("AI", 0, this, {epsilon, alpha, gamma}))
+        if (this.isTraining) {
+            this.players.push(new GamePlayer("AI", 0, this))
         } else {
             this.players.push(new GamePlayer("local human", 0))
         }
@@ -49,8 +49,8 @@ class GameLogic {// eslint-disable-line
         for (let p=1; p<players; p++) {
 
             // TODO, disallow more than 1 other player when playing against AI - model needed would be too big
-            if (this.isTraining) {
-                this.players.push(new GamePlayer("AI", p, this, {epsilon, alpha, gamma}))
+            if (this.aiOpponent) {
+                this.players.push(new GamePlayer("AI", p, this))
             } else if (isMultiplayer) {
                 this.players.push(new GamePlayer("remote human", p))
             } else {
@@ -121,6 +121,8 @@ class GameLogic {// eslint-disable-line
                 this.resetGame()
             }
 
+            if (!this.isTraining) this.TEMPReset()
+
             return
         }
 
@@ -134,6 +136,7 @@ class GameLogic {// eslint-disable-line
             this.players[p].reward(1, this.gameState)
             this.players.forEach((player, pi) => pi!=p && player.reward(-1, this.gameState))
             winsDisplay.style.display = "inline-block"
+            if (!this.isTraining) this.TEMPReset()
             return
         }
 
@@ -141,6 +144,8 @@ class GameLogic {// eslint-disable-line
         if (this.isFull()) {
             console.log("Tied game")
             this.players.forEach(player => player.reward(0.25, this.gameState))
+            if (!this.isTraining) this.TEMPReset()
+
             return
         }
 
@@ -190,6 +195,7 @@ class GameLogic {// eslint-disable-line
     TEMPReset () {
         this.resetGame()
         this.playerIndex = Math.random() < 0.5 ? 1 : 0
+        this.board.render(this.gameState)
         this.players[this.playerIndex].pickMove(this.gameState)
     }
 
@@ -243,15 +249,16 @@ class GameLogic {// eslint-disable-line
     }
 
     isFull () {
-        for (let b=0; b<this.span; b++) {
+        // for (let b=0; b<this.span; b++) {
             for (let r=0; r<this.span; r++) {
                 for (let c=0; c<this.span; c++) {
-                    if (this.gameState[b][r][c] === " ") {
+                    // if (this.gameState[b][r][c] === " ") {
+                    if (this.gameState[0][r][c] === " ") {
                         return false
                     }
                 }
             }
-        }
+        // }
 
         return true
     }

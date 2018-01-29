@@ -10,7 +10,7 @@ const db = require('./game-MongoDB')
 
 // The size of this file is gonna get out of hand; we will need to store the data in a database, or something
 console.log("Loading AI weights...")
-const AI = new ServerAI(JSON.parse(fs.readFileSync("weights20000.json")))
+const AI = new ServerAI(JSON.parse(fs.readFileSync("weights200000.json")))
 
 
 try {
@@ -29,14 +29,8 @@ const index = (request, response) => {
     sendData({request, response, code: 200, data: fs.readFileSync("game.html", "utf8"), contentType: "text/html"})
 }
 
-const viewer = (request, response) => {
-    sendData({request, response, code: 200, data: pug.renderFile("./viewer.pug", {googleClientId}), contentType: "text/html"})
-}
 
-const controller = (request, response) => {
-    sendData({request, response, code: 200, data: pug.renderFile("./controller.pug", {googleClientId}), contentType: "text/html"})
-}
-
+// old. to be removed/changed
 const userArea = (request, response) => {
 
     let user
@@ -77,14 +71,17 @@ const userArea = (request, response) => {
 // ====
 const getAIMove = async(request, response, {gameState}) => {
     console.log("getAIMove gameState", gameState)
+
     const move = AI.pickMove(gameState)
     console.log("move", move)
+
     sendData({request, response, code: 200, data: JSON.stringify({move})})
 }
 
 const rewardAI = (request, response, {value, gameState}) => {
+    // TODO, lastState+lastMove
     AI.reward(value, gameState)
-    sendData({request, response, code: 204})
+    sendData({request, response, code: 200, data: "{}"})
 }
 
 
@@ -102,7 +99,7 @@ const createRoom = async(request, response, {roomName}) => {
 //        responseData = roomName
 //    }
     let roomExists = await db.getRoom(roomName);
-    
+
     if(roomExists === []) {
       let room = await db.createRoom(roomName)
       responseData = roomName;
@@ -338,8 +335,6 @@ exports.initProject = ({sendDataCallback, error}) => {
     return {
         get: {
             [/$/] : index,
-            [/viewer$/] : viewer,
-            [/controller$/] : controller,
             [/users\/[^\/]+$/] : userArea
         },
         post: {

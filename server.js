@@ -158,9 +158,10 @@ const handleRequests = (request, response) => {
                 const contentType = mimes.contentType(extension)
 
                 // Return an error if the extension given is not supported
-                if (!contentType && extension!="wasm" || contentType=="application/json; charset=utf-8" && !requestPath.endsWith("manifest.json")) {
-                    return error(response, 400)
-                }
+                // if (!contentType && extension!="wasm" || contentType=="application/json; charset=utf-8" && !requestPath.endsWith("manifest.json")) {
+                // if (!contentType && extension!="wasm" || !requestPath.endsWith("manifest.json")) {
+                //     return error(response, 400)
+                // }
 
                 fs.readFile(serverFilePath.replace(/%20/g, " "), (err, fileData) => {
 
