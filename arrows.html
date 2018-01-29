@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script src="three.min.js"></script>
+    <style>
+    body {
+        overflow: hidden;
+    }
+    </style>
+    <script>
+    "use strict"
+    window.addEventListener("load", () => {
+        window.scene = new THREE.Scene()
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+        const raycaster = new THREE.Raycaster()
+        const mouse = new THREE.Vector2()
+        let rotation = 45
+        let mouseIsDown = false
+
+        const WHITE = 0x555555
+        const YELLOW = 0xaaaa00
+        const CYAN = 0x00aaaa
+        let radius = 5
+
+        const renderer = new THREE.WebGLRenderer({alpha: true, antiAliasing: true})
+        renderer.setPixelRatio( window.devicePixelRatio )
+        renderer.setSize(window.innerWidth, window.innerHeight)
+        document.body.appendChild(renderer.domElement)
+
+        let hoveredObject
+        let clickedObject
+
+        const light = new THREE.DirectionalLight( 0xffffff, 1 )
+        light.position.set( 0, 1, 0 ).normalize()
+        scene.add(light)
+
+        camera.position.z = 4
+        camera.position.y = 2
+
+        const arrowModels = []
+        const arrowNames = ["left", "right", "up", "down", "forward", "backward"]
+        const rotations = [
+            {x: 0.25, y: 0.0, z: 0}, // left
+            {x: 0.25, y: 0.50, z: 0}, // right
+            {x: 0.25, y: 0.75, z: 0}, // up
+            {x: 0.25, y: 0.25, z: 0}, // down
+            {x: 0.25, y: 0.50, z: 0.25}, // forward
+            {x: 0.25, y: 0.50, z: 0.75}, // backward
+        ]
+        const positions = [
+            {x: -0.125, y: 0, z: 0}, // left
+            {x: 0.125, y: 0, z: 0}, // right
+            {x: 0, y: 0.1, z: 0}, // up
+            {x: 0, y: -0.1, z: 0}, // down
+            {x: 0, y: 0, z: -0.125}, // forward
+            {x: 0, y: 0, z: 0.125}, // backward
+        ]
+        const loader = new THREE.ObjectLoader()
+
+        for (let a=0; a<6; a++) {
+            loader.load("arrow.json", model => {
+
+                model.position.x = positions[a].x * 2 * Math.PI
+                model.position.y = positions[a].y * 2 * Math.PI
+                model.position.z = positions[a].z * 2 * Math.PI
+
+                model.rotation.x = rotations[a].x * 2 * Math.PI
+                model.rotation.y = rotations[a].y * 2 * Math.PI
+                model.rotation.z = rotations[a].z * 2 * Math.PI
+
+                model.children.forEach(c => {
+                    if (a==3) {
+                        c.material.emissive.setHex(CYAN)
+                        clickedObject = model
+                    } else {
+                        c.material.emissive.setHex(WHITE)
+                    }
+                })
+
+                arrowModels.push(model)
+                model.data = {arrowIndex: a}
+                scene.add(model)
+            })
+        }
+
+        const render = () => {
+            requestAnimationFrame(render)
+            camera.lookAt(scene.position)
+
+            // const vector = new THREE.Vector3(mouse.x, mouse.y, 1)
+            camera.updateMatrixWorld()
+            raycaster.setFromCamera( mouse, camera )
+
+            const intersects = raycaster.intersectObjects(scene.children, true)
+
+            if (intersects.length) {
+
+                hoveredObject = intersects[0].object.name.toLowerCase().startsWith("box") ? intersects[0].object.parent : intersects[0].object
+
+                if (hoveredObject == clickedObject) {
+                    // do nothing
+                } else {
+
+                    if (mouseIsDown) {
+                        if (clickedObject) {
+                            // Clear old one
+                            clickedObject.children.forEach(c => c.material.emissive.setHex(WHITE))
+                        }
+
+                        // Set new one to cyan
+                        hoveredObject.children.forEach(c => c.material.emissive.setHex(CYAN))
+                        clickedObject = hoveredObject
+                        console.log("clicked", arrowNames[clickedObject.data.arrowIndex])
+                    } else {
+                        // Hovering over non clicked item without the mouse down
+                        arrowModels.forEach(arrow => {
+                            if (arrow != clickedObject) {
+                                arrow.children.forEach(c => c.material.emissive.setHex(WHITE))
+                            }
+                        })
+
+                        if (hoveredObject != clickedObject) {
+                            hoveredObject.children.forEach(c => c.material.emissive.setHex(YELLOW))
+                        }
+                    }
+                }
+
+            } else {
+                if (arrowModels) {
+                    arrowModels.forEach(arrow => {
+
+                        if (arrow != clickedObject) {
+                            arrow.children.forEach(c => c.material.emissive.setHex(WHITE))
+                        }
+                    })
+                }
+                hoveredObject = null
+            }
+            renderer.render(scene, camera)
+        }
+
+        render()
+
+        document.addEventListener("mousemove", event => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+            mouse.y = - (event.clientY / window.innerHeight) * 2 + 1
+        }, false)
+
+        document.addEventListener("mousedown", () => mouseIsDown = true)
+        document.addEventListener("mouseup", () => mouseIsDown = false)
+        document.addEventListener("click", () => mouseIsDown = false)
+
+
+        const setRotation = rotation => {
+            camera.position.x = Math.sin(rotation*Math.PI/180) * 4
+            camera.position.z = Math.cos(rotation*Math.PI/180) * 4
+        }
+        setRotation(45)
+
+        window.addEventListener("wheel", ({deltaY}) => {
+            rotation = (rotation + (deltaY > 0 ? 1 : -1) * 5) % 360
+            setRotation(rotation)
+        })
+
+    })
+
+    </script>
+</head>
+<body>
+
+</body>
+</html>
