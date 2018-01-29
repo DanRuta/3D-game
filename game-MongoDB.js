@@ -27,6 +27,13 @@ const connectDB = testing => {
 }
 
 /** AI Stuff **/
+module.exports.countQ = async () => {
+  const db = await connectDB()
+
+  const q = db.collection("q")
+  const result = await q.count({})
+  return result
+}
 module.exports.getQ = async (key) => {
   const db = await connectDB()
 
@@ -35,11 +42,27 @@ module.exports.getQ = async (key) => {
   return result
 }
 
+module.exports.batchGetQ = async (keys) => {
+  const db = await connectDB()
+
+  const q = db.collection("q")
+  const result = await q.find({key: {$in: keys}}, {_id: 0}).toArray()
+  return result
+}
+
 module.exports.setQ = async (key, value) => {
   const db = await connectDB()
 
   const q = db.collection("q")
   const result = await q.insert({key, value})
+  return result
+}
+
+module.exports.updateQ = async (key, value) => {
+  const db = await connectDB()
+
+  const q = db.collection("q")
+  const result = await q.updateOne({key}, {$set: {value}})
   return result
 }
 

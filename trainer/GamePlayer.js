@@ -33,27 +33,13 @@ class GamePlayer {// eslint-disable-line
     }
 
     getQ (state, action, useDB) {
+        const key = state.join("").replace(/,/g,"") + action.toString().replace(/,/g, "")
+
         if (useDB) {
-            const key = state.join("").replace(/,/g,"") + action.toString().replace(/,/g, "")
             return game.db.getQ(key)
-
-            // return new Promise((resolve, reject) => {
-
-            //     console.log("q[0]", this.q['                           021'])
-
-            //     if (this.q[key]==undefined) {
-            //         console.log(key, "is undefined")
-            //         this.q[key] = 1
-            //     }
-
-            //     // return this.q[key]
-            //     resolve(this.q[key])
-            // })
         } else {
-            const key = state.join("").replace(/,/g,"") + action.toString().replace(/,/g, "")
 
             if (this.q[key]==undefined) {
-                // console.log(key, "is undefined")
                 this.q[key] = 1
             }
 
@@ -65,17 +51,16 @@ class GamePlayer {// eslint-disable-line
     getAvailableMoves (gameState) {
         const moves = []
 
-        // for (let b=0; b<this.game.span; b++) {
+        for (let b=0; b<this.game.span; b++) {
             for (let r=0; r<this.game.span; r++) {
                 for (let c=0; c<this.game.span; c++) {
-                    if (Number.isNaN(parseInt(gameState[0][r][c]))) {
-                        moves.push([0, r, c])
+                    if (Number.isNaN(parseInt(gameState[b][r][c]))) {
+                        moves.push([b, r, c])
                     }
                 }
             }
-        // }
+        }
 
-        // shuffle(moves)
         return moves
     }
 
@@ -101,19 +86,6 @@ class GamePlayer {// eslint-disable-line
 
         } else {
 
-
-            // const moves = this.getAvailableMoves(gameState)
-            // // const moves = this.getAvailableMoves([gameState[0]])
-            // const qs = []
-
-            // for (let m=0; m<moves.length; m++) {
-            //     qs.push(this.getQ(gameState, moves[m]))
-            // }
-
-            // const maxQ = qs.slice(0).sort().reverse()[0]
-            // this.game.makeMove(this.playerIndex, moves[qs.indexOf(maxQ)][0], moves[qs.indexOf(maxQ)][1], moves[qs.indexOf(maxQ)][2])
-
-
             // Deep copy - TODO, optimize
             this.lastState = JSON.parse(JSON.stringify(gameState))
             const moves = this.getAvailableMoves(this.lastState)
@@ -136,14 +108,12 @@ class GamePlayer {// eslint-disable-line
 
                 for (let m=0; m<moves.length; m++) {
                     queries.push(this.getQ(this.lastState, moves[m], true))
-                    // qs.push(this.getQ(this.lastState, moves[m]))
-                    // .then(q => qs.push(q))
                 }
 
                 Promise.all(queries).then(qs => {
                     qs = qs.map(record => record[0].value)
-                    console.log("qs", qs)
-                    console.log("acc qs", [...new Array(moves.length)].map((_, i) => this.getQ(this.lastState, moves[i], false)))
+                    // console.log("qs", qs)
+                    // console.log("acc qs", [...new Array(moves.length)].map((_, i) => this.getQ(this.lastState, moves[i], false)))
                     const maxQ = qs.slice(0).sort().reverse()[0]
 
                     this.lastMove = moves[qs.indexOf(maxQ)]

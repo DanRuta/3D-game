@@ -66,27 +66,32 @@ const userArea = (request, response) => {
 const getAIMove = async (request, response, {gameState}) => {
 
     const moves = getAvailableMoves(gameState)
-    const queries = []
     const key = gameState.join("").replace(/,/g,"")
 
-    // TODO, batch these queries
-    for (let m=0; m<moves.length; m++) {
-        queries.push(db.getQ(key + moves[m].toString().replace(/,/g, "")))
-    }
+    db.batchGetQ(moves.map(move => key + move.toString().replace(/,/g, "")))
+    .then(qs => {
+        // Need to keep the same number of records, even when only, eg, half exist for a
+        // given set of keys, defaulting to 1 when not existent. However, when there's some
+        // missing records, the returned values no longer match up to the queried moves
+        // So here, I'm re-matching them up to the correct moves
+        const qVals = [...new Array(moves.length)].map(() => 1)
 
-    Promise.all(queries).then((qs, qi) => {
-        qs = qs.map(record => {
+        for (let m=0; m<moves.length; m++) {
+            const q = qs.find(q => q.key.endsWith(moves[m].toString().replace(/,/g, "")))
 
-            if (record.length) {
-                return record[0].value
+            if (q) {
+                qVals[qs.indexOf(q)] = q.value
             } else {
-                db.setQ(key + moves[qi].toString().replace(/,/g, ""), 1)
-                return 1
+                // Set the missing values to 1, in the database
+                db.setQ(key + moves[mi].toString().replace(/,/g, ""), 1)
             }
-        })
-        const maxQ = qs.slice(0).sort().reverse()[0]
 
-        sendData({request, response, code: 200, data: JSON.stringify({move: moves[qs.indexOf(maxQ)]})})
+        }
+
+        const maxQ = qVals.slice(0).sort().reverse()[0]
+        const move = moves[qVals.indexOf(maxQ)]
+
+        sendData({request, response, code: 200, data: JSON.stringify({move})})
     })
 }
 
@@ -340,17 +345,17 @@ const getAvailableMoves = gameState => {
 
     console.log("checking", gameState, span)
 
-    // for (let b=0; b<span; b++) {
+    for (let b=0; b<span; b++) {
         for (let r=0; r<span; r++) {
             for (let c=0; c<span; c++) {
-                // if (Number.isNaN(parseInt(gameState[b][r][c]))) {
-                if (Number.isNaN(parseInt(gameState[0][r][c]))) {
-                    // moves.push([b, r, c])
-                    moves.push([0, r, c])
+                if (Number.isNaN(parseInt(gameState[b][r][c]))) {
+                // if (Number.isNaN(parseInt(gameState[0][r][c]))) {
+                    moves.push([b, r, c])
+                    // moves.push([0, r, c])
                 }
             }
         }
-    // }
+    }
 
     return moves
 }

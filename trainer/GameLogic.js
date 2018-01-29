@@ -250,16 +250,16 @@ class GameLogic {// eslint-disable-line
     }
 
     isFull () {
-        // for (let b=0; b<this.span; b++) {
+        for (let b=0; b<this.span; b++) {
             for (let r=0; r<this.span; r++) {
                 for (let c=0; c<this.span; c++) {
-                    // if (this.gameState[b][r][c] === " ") {
-                    if (this.gameState[0][r][c] === " ") {
+                    if (this.gameState[b][r][c] === " ") {
+                    // if (this.gameState[0][r][c] === " ") {
                         return false
                     }
                 }
             }
-        // }
+        }
 
         return true
     }

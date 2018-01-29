@@ -87,17 +87,21 @@ if (doTraining) {
         qs[k] = {key: keys[k], value: game.players[0].q[keys[k]]}
     }
 
-    db.setManyQ(qs)
+    db.setManyQ(qs).then(() => console.log("Done"))
     game.TEMPReset(true)
 
 } else {
-    // db.deleteAllQ()
+    db.deleteAllQ()
+    db.countQ().then(c => console.log(`Total count: ${c}`))
 
-    db.getAllQ().then(data => {
 
-        console.log("data.length", data.length)
+    // db.updateQ('1                          001', 20) // 0.97
+    // db.getAllQ().then(data => {
 
-        game.players[1].q = data
+    //     console.log("data.length", data.length)
+    //     console.log(data[0])
+    //     console.log(data.find(r => r.key == '1                          001'))
+
         game.TEMPReset(true)
-    })
+    // })
 }
