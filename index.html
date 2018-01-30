@@ -1,0 +1,256 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <title>T^3 - 3d Tic Tac Toe</title>
+    <meta name="description" content="tic tac toe game">
+    <meta name="author" content="Group 14">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="css/style.min.css">
+
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
+    <![endif]-->
+    <style>
+    .panel {
+        display: none;
+    }
+    #main {
+        display: block;
+    }
+    </style>
+    <script>
+    "use strict"
+    window.addEventListener("load", () => {
+
+        const panels = [main]
+
+        const changePanel = panel => {
+            window.location.hash = `#${panel.id}`
+
+            window.onhashchange = () => {
+                if (!panels.length) {
+                    history.back()
+                } else if ("#"+panels[panels.length-1].id != window.location.hash) {
+                    goBack()
+                }
+            }
+
+            panels[panels.length-1].style.display = "none"
+            panel.style.display = "block"
+            panels.push(panel)
+        }
+
+        const goBack = () => {
+            panels[panels.length-1].style.display = "none"
+            panels.pop()
+            panels[panels.length-1].style.display = "block"
+        }
+
+        playLink.addEventListener("click", () => changePanel(play))
+        singleLink.addEventListener("click", () => changePanel(single))
+        multiplayerLink.addEventListener("click", () => changePanel(multiplayer))
+        aiLink.addEventListener("click", () => changePanel(ai))
+        joinLink.addEventListener("click", () => changePanel(join))
+        createLink.addEventListener("click", () => changePanel(create))
+
+        document.querySelectorAll(".privacyLinks").forEach(a => {
+            a.addEventListener("click", () => {
+                if (!panels[panels.length-1].className.includes(".privacyLinks")) {
+                    changePanel(privacy)
+                }
+            })
+        })
+
+        document.querySelectorAll(".panel-back").forEach(a => a.addEventListener("click", goBack))
+
+    })
+    </script>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center my-5"><a href="/">T^3</a></h1>
+
+                <!-- index -->
+                <div class="panel mb-5" id="main">
+                    <h2 class="panel-title">T^3 is a 3d, VR Tic Tac Toe</h2>
+                    <!-- /.panel-title -->
+                    <div class="panel-content">Play against yourself, your friends or an AI.</div>
+                    <!-- /.panel-content -->
+                    <div class="panel-content">Manipulate gravity to turn the game in your favour, or against it, with friends across the world.</div>
+                    <!-- /.panel-content -->
+                    <div class="panel-content bold">Sign in with Google to get started.</div>
+                    <!-- /.panel-content bold -->
+                    <a id="playLink" href="javascript:void(0)" class="panel-button btn btn-primary">Sign in with google</a>
+                </div>
+                <!-- /.panel -->
+
+                <!-- privacy policy -->
+                <div class="panel mb-5" id="privacy">
+                    <div class="panel-back"><a href="javascript:void(0)"><i class="fa fa-arrow-left mr-2"></i>Back</a></div>
+                    <h2 class="panel-title">Privacy Policy</h2>
+                    <!-- /.panel-title -->
+                    <div class="panel-content mb-0">The Policy</div>
+                </div>
+                <!-- /.panel -->
+
+                <!-- play -->
+                <div class="panel mb-5" id="play">
+                    <h2 class="panel-title">Welcome, username</h2>
+                    <!-- /.panel-title -->
+                    <div class="panel-content">Select a game type:</div>
+                    <!-- /.panel-content -->
+                    <div class="d-flex flex-column mb-0">
+                        <a id="singleLink" href="javascript:void(0)" class="panel-button btn btn-primary">Single Player</a>
+                        <a id="multiplayerLink" href="javascript:void(0)" class="panel-button btn btn-primary">Online Multiplayer</a>
+                        <a id="aiLink" href="javascript:void(0)" class="panel-button btn btn-primary">AI Challenge</a>
+                    </div>
+                    <!-- /.d-flex -->
+
+                </div>
+                <!-- /.panel -->
+
+
+                <div class="panel mb-5" id="single">
+                    <div class="panel-back"><a href="javascript:void(0)"><i class="fa fa-arrow-left mr-2"></i>Back</a></div>
+                    <h2 class="panel-title">Single Player</h2>
+                    <!-- /.panel-title -->
+
+                    <form action="/game/">
+                        <div class="form-group row">
+                            <label for="numPlayers" class="col-sm-6 col-form-label">Number of players</label>
+                            <div class="col-sm-6">
+                                <input type="number" class="form-control" id="numPlayers" value="2">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="boardSize" class="col-sm-6 col-form-label">Board size</label>
+                            <div class="col-sm-6">
+                                <select class="form-control" id="boardSize">
+                                    <option>3x3</option>
+                                    <option>5x5</option>
+                                    <option>7x7</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="placeAnywhere" class="col-sm-6 col-form-label">Place anywhere</label>
+                            <div class="col-sm-6">
+                                <select class="form-control" id="placeAnywhere">
+                                    <option>No</option>
+                                    <option>Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2">Play T^3</button>
+                  </form>
+                </div>
+                <!-- /.panel -->
+
+                <div class="panel mb-5" id="multiplayer">
+                    <div class="panel-back"><a href="javascript:void(0)"><i class="fa fa-arrow-left mr-2"></i>Back</a></div>
+                    <h2 class="panel-title">Multiplayer</h2>
+                    <!-- /.panel-title -->
+                    <div class="panel-content">Please join or create a room to play T^3</div>
+                    <div class="d-flex flex-column">
+                        <a id="joinLink" href="javascript:void(0)" class="panel-button btn btn-primary">Join Room</a>
+                        <a id="createLink" href="javascript:void(0)" class="panel-button btn btn-primary">Create Room</a>
+                    </div>
+                </div>
+                <!-- /.panel -->
+
+                <div class="panel mb-5" id="ai">
+                    <div class="panel-back"><a href="javascript:void(0)"><i class="fa fa-arrow-left mr-2"></i>Back</a></div>
+                    <h2 class="panel-title">Play AI Game</h2>
+                    <!-- /.panel-title -->
+
+                    <div class="panel-content">Are you ready?</div>
+
+                    <a href="/game/" class="btn btn-primary mt-2">Play T^3</a>
+
+                </div>
+                <!-- /.panel -->
+
+                <div class="panel mb-5" id="join">
+                    <div class="panel-back"><a href="javascript:void(0)"><i class="fa fa-arrow-left mr-2"></i>Back</a></div>
+                    <h2 class="panel-title">Join Room</h2>
+                    <!-- /.panel-title -->
+
+                    <div class="panel-content">Please select a room to join</div>
+
+                    <form action="/game/">
+                        <div class="form-group row">
+                            <label for="roomName" class="col-sm-6 col-form-label">Room Name</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" id="roomName" placeholder="room name">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2">Play T^3</button>
+                  </form>
+                </div>
+                <!-- /.panel -->
+
+                <div class="panel mb-5" id="create">
+                    <div class="panel-back"><a href="javascript:void(0)"><i class="fa fa-arrow-left mr-2"></i>Back</a></div>
+                    <h2 class="panel-title">Create Room</h2>
+                    <!-- /.panel-title -->
+
+                    <div class="panel-content">Please create the room below.</div>
+
+                    <form action="/game/">
+                        <div class="form-group row">
+                            <label for="roomName" class="col-sm-6 col-form-label">Room Name</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" id="roomName" placeholder="room name">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="numPlayers" class="col-sm-6 col-form-label">Number of players</label>
+                            <div class="col-sm-6">
+                                <input type="number" class="form-control" id="numPlayers" value="2">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="boardSize" class="col-sm-6 col-form-label">Board size</label>
+                            <div class="col-sm-6">
+                                <select class="form-control" id="boardSize">
+                                    <option>3x3</option>
+                                    <option>5x5</option>
+                                    <option>7x7</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="placeAnywhere" class="col-sm-6 col-form-label">Place anywhere</label>
+                            <div class="col-sm-6">
+                                <select class="form-control" id="placeAnywhere">
+                                    <option>No</option>
+                                    <option>Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2">Play T^3</button>
+                  </form>
+                </div>
+                <!-- /.panel -->
+
+
+
+                <footer class="text-center mb-5"><a href="/">Logout</a> | <a class="privacyLinks" href="javascript:void(0)">Privacy Policy</a></footer>
+            </div>
+            <!-- /.col-12 -->
+        </div>
+        <!-- /.row -->
+    </div>
+    <!-- /.container -->
+
+
+</body>
+</html>

@@ -1,0 +1,122 @@
+$primary: #4494F9;
+$secondary: #623CEA;
+$white: #FFFFFF;
+$third: #FF9A3D;
+$black: #454545;
+
+
+$theme-colors: (
+  "primary": #4494F9,
+  "secondary": #623CEA,
+  "success": #5ADB4C,
+  "danger": #C44646,
+
+);
+
+@import 'scss/bootstrap.scss';
+@import url('https://fonts.googleapis.com/css?family=Nunito:400,600');
+
+* {
+    -webkit-transition: .3s;
+    transition: .3s;
+    word-wrap: break-word;
+}
+
+body {
+    font-family: 'Lato', Arial, serif;
+    background-color: #F6F7F7;
+}
+
+a {
+    color: $black;
+    &:hover {
+        text-decoration: none;
+    }
+}
+
+// -- Typography
+
+h1, h2, h3 {
+    font-family: 'Nunito', serif;
+    font-weight: 600;
+}
+
+main {
+    h1, h2 {
+        //
+    }
+    h1 {
+        margin-bottom: 1em;
+    }
+    h2 {
+        margin-top: 1em;
+        margin-bottom: 1em;
+    }
+    h3,h4,h5,h6 {
+        margin-bottom: 1em;
+    }
+    table {
+        margin-bottom: 2em;
+    }
+    ul,ol,dl {
+        margin-bottom: 1em;
+        ul, ol {
+            margin-bottom: 0;
+            ul, ol {
+                margin-bottom: 0;
+            }
+        }
+    }
+}
+
+.panel, .side-panel {
+    background-color: #fff;
+    padding: 30px;
+    text-align: center;
+    border-radius: 5px;
+    box-shadow: 0 15px 19px 0 rgba(56,0,116,0.09);
+    .panel-back {
+        position: absolute;
+        @media screen and (max-width: 568px) {
+             position: relative;
+             margin-bottom: 20px;;
+        }
+    }
+    max-width: 400px;
+    margin: 0 auto;
+    .panel-title {
+        font-weight: 600;
+        margin-top: 10px;
+        font-size: 20px;
+        margin-bottom:30px;;
+    }
+    .panel-content {
+        margin-bottom: 30px
+    }
+    .panel-button {
+        margin-bottom: 10px;
+    }
+}
+
+.bold {
+    font-weight: 600;
+}
+
+.top-panel {
+    width: 100%;
+    max-width: 1000px;
+}
+
+.side-panel {
+    margin-bottom: 40px;
+    .player {
+        ul {
+            margin-left: 0;
+            padding-left: 0;
+            li {
+                margin-left: 0;
+                display: inline;
+            }
+        }
+    }
+}
