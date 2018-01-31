@@ -8,8 +8,8 @@
     <meta charset="utf8"/>
     <script>
     "use strict"
-    let ws;
-    let roomNameValue;
+    let ws
+    let roomNameValue
     window.addEventListener("load", () => {
 
         let isRotating = false
@@ -29,12 +29,14 @@
                 isMultiplayer: false
             })
             content.appendChild(game.board.boardElement)
-            if(roomName.value.trim() !== ""){
-              roomNameValue = roomName.value.trim()
-              connectWebSockets()
-            }
         })
         resetButton.click()
+
+        roomNameValue = roomName.value.trim()
+
+        if (roomNameValue !== "") {
+            connectWebSockets()
+        }
 
         // Arrows stuff
         const initArrows = () => {
@@ -136,7 +138,7 @@
                             hoveredObject.children.forEach(c => c.material.emissive.setHex(CYAN))
                             clickedObject = hoveredObject
                             console.log("clicked", arrowNames[clickedObject.data.arrowIndex])
-                            if(ws){
+                            if (ws){
                                 ws.send(
                                     JSON.stringify(
                                         {   direction: arrowNames[clickedObject.data.arrowIndex],
@@ -183,6 +185,8 @@
             const setRotation = rotation => {
                 camera.position.x = Math.sin(rotation*Math.PI/180) * 3
                 camera.position.z = Math.cos(rotation*Math.PI/180) * 3
+                this.game.board.rotation = rotation
+                this.game.board.rotate()
             }
             setRotation(rotation=-45)
 
@@ -192,9 +196,18 @@
                 mouse.x = (event.offsetX / size) * 2 - 1
                 mouse.y = - (event.offsetY / size) * 2 + 1
             }, false)
-            document.addEventListener("mousedown", () => mouseIsDown = true)
-            document.addEventListener("mouseup", () => mouseIsDown = false)
-            document.addEventListener("click", () => mouseIsDown = false)
+            document.addEventListener("mousedown", () => {
+                mouseIsDown = true
+                game.board.mouseIsDown = true
+            })
+            document.addEventListener("mouseup", () => {
+                mouseIsDown = false
+                game.board.mouseIsDown = false
+            })
+            document.addEventListener("click", () => {
+                mouseIsDown = false
+                game.board.mouseIsDown = false
+            })
 
             window.addEventListener("wheel", ({deltaY}) => {
                 isRotating = true
@@ -210,6 +223,12 @@
             window.addEventListener("arrowClicked", ({detail}) => {
 
             })
+
+            window.addEventListener("keydown", e => {
+                if (e.code == "Space") {
+                    game.board.toggleExploded()
+                }
+            })
         }
         initArrows()
 
@@ -222,16 +241,16 @@
     })
 
     function connectWebSockets(roomName) {
-         ws =  new WebSocket("ws://vrscrible.localhost:8000/" + roomName)
+        ws =  new WebSocket("ws://vrscrible.localhost:8000/" + roomName)
 
         ws.addEventListener("message", (message) => {
             const data = JSON.parse(message.data)
             console.log(data)
 
-            if(data.type === "gravity") {
+            if (data.type === "gravity") {
                 game.shiftGravity(data.direction)
 
-            } else if(data.type === "move") {
+            } else if (data.type === "move") {
 
 
                 let player = data.playerIndex;
@@ -241,13 +260,12 @@
                 console.log(player, b, r, c)
                 game.makeMove(player, b, r, c)
             }
-          })
+        })
 
-          ws.addEventListener("open", () => {
+        ws.addEventListener("open", () => {
             console.log("connect ws")
             ws.send(JSON.stringify({userId: "1234", username: "rob", type: "text", room: roomNameValue }))
-          })
-
+        })
     }
 
     </script>

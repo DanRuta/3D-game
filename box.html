@@ -24,7 +24,6 @@
 
         let explodedMult = 1
         let isLerping = false
-        let radius = (BOX_WIDTH * 1.5) * SPAN * 2
         let rotation = 45
         let mouseIsDown = false
         let theta = 0
@@ -57,7 +56,7 @@
         let hoveredObject
         const boxes = [...new Array(SPAN)].map(b => [...new Array(SPAN)].map(r => [...new Array(SPAN)]))
         const spheres = [...new Array(SPAN)].map(b => [...new Array(SPAN)].map(r => [...new Array(SPAN)]))
-        const boxOutlines = [...new Array(SPAN)].map(b => [...new Array(SPAN)].map(r => [...new Array(SPAN)]))
+        // const boxOutlines = [...new Array(SPAN)].map(b => [...new Array(SPAN)].map(r => [...new Array(SPAN)]))
 
 
         const addBox = (b, r, c) => {
@@ -83,10 +82,10 @@
             boxes[b][r][c] = box
 
             // Outline stuff
-            const outlineGeometry = new THREE.EdgesGeometry(box.geometry)
-            const outlineMaterial = new THREE.LineBasicMaterial({color: LIGHTGRAY, linewidth: 40, transparent: true})
-            outlineMaterial.opacity = OPACITY_ON
-            const outline = new THREE.LineSegments(outlineGeometry, outlineMaterial)
+            // const outlineGeometry = new THREE.EdgesGeometry(box.geometry)
+            // const outlineMaterial = new THREE.LineBasicMaterial({color: LIGHTGRAY, linewidth: 40, transparent: true})
+            // outlineMaterial.opacity = OPACITY_ON
+            // const outline = new THREE.LineSegments(outlineGeometry, outlineMaterial)
             // box.add(outline)
         }
 
@@ -175,26 +174,26 @@
             }
         }
 
-        const lerpSphere = (sphere, newPos, axis) => {
+        // const lerpSphere = (sphere, newPos, axis) => {
 
-            console.log("lerpSphere", sphere, newPos, axis)
+        //     console.log("lerpSphere", sphere, newPos, axis)
 
-            switch (axis) {
-                case "x":
+        //     switch (axis) {
+        //         case "x":
 
-                    console.log("here", sphere.position.x, newPos.x)
-                    while (Math.abs(sphere.position.x - newPos.x) > 1e-6) {
-                        console.log("here 1")
-                        sphere.position.x += (newPos.x - sphere.position.x) / 100
-                    }
+        //             console.log("here", sphere.position.x, newPos.x)
+        //             while (Math.abs(sphere.position.x - newPos.x) > 1e-6) {
+        //                 console.log("here 1")
+        //                 sphere.position.x += (newPos.x - sphere.position.x) / 100
+        //             }
 
-                    break
-                case "y":
-                    break
-                case "z":
-                    break
-            }
-        }
+        //             break
+        //         case "y":
+        //             break
+        //         case "z":
+        //             break
+        //     }
+        // }
 
 
         window.shiftSpheres = (axis, direction) => {
@@ -229,7 +228,7 @@
         const render = () => {
             requestAnimationFrame(render)
 
-            theta += 0.1
+            // theta += 0.1
 
             // Lerp the boxes into position, when exploded
             if (isLerping) {
