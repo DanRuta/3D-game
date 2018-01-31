@@ -43,7 +43,7 @@
 
             let hoveredObject
             let clickedObject
-            const WHITE = 0x555555
+            const WHITE = 0xaaaaaa
             const YELLOW = 0xaaaa00
             const CYAN = 0x00aaaa
             const arrowModels = []
@@ -78,7 +78,7 @@
             const loader = new THREE.ObjectLoader()
             const raycaster = new THREE.Raycaster()
             const mouse = new THREE.Vector2()
-            const light = new THREE.DirectionalLight( 0xffffff, 1 )
+            const light = new THREE.DirectionalLight( 0xffffff, 0.5 )
             light.position.set( 0, 1, 0 ).normalize()
             scene.add(light)
 
@@ -196,9 +196,12 @@
                 mouse.x = (event.offsetX / size) * 2 - 1
                 mouse.y = - (event.offsetY / size) * 2 + 1
             }, false)
-            document.addEventListener("mousedown", () => {
-                mouseIsDown = true
-                game.board.mouseIsDown = true
+            document.addEventListener("mousedown", event => {
+                if (event.target == arrowsCanvas) {
+                    mouseIsDown = true
+                } else if (event.target == rendererDomElement) {
+                    game.board.mouseIsDown = true
+                }
             })
             document.addEventListener("mouseup", () => {
                 mouseIsDown = false
