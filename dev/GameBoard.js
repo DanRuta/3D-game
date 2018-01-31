@@ -9,6 +9,7 @@ class GameBoard {// eslint-disable-line
         this.playerColours = ["blue", "red", "green", "purple", "yellow", "orange", "black", "cyan", "pink", "darkgrey"]
         this.rotation = -45
         this.span = span
+        this.game = game // Two way binding
         this.gravity = gravity
         this.gravityEnabled = gravityEnabled
 
@@ -35,7 +36,7 @@ class GameBoard {// eslint-disable-line
             CYAN: 0x00ffff,
             PINK: 0xffc0cb,
             LIGHTGREY: 0x999999,
-            DARKGREY: 0x777777,
+            DARKGREY: 0x666666,
             WHITE: 0xffffff
         }
 
@@ -46,6 +47,7 @@ class GameBoard {// eslint-disable-line
         this.renderer = new THREE.WebGLRenderer({alpha: true, antialias: true})
         this.renderer.setPixelRatio(window.devicePixelRatio)
         this.renderer.setSize(window.innerWidth-100, window.innerHeight-200)
+        this.renderer.domElement.id = "rendererDomElement"
         this.boardElement = this.renderer.domElement
 
         const light = new THREE.DirectionalLight(this.colours.LIGHTGREY, 1)
@@ -55,11 +57,11 @@ class GameBoard {// eslint-disable-line
         this.camera.position.y = 2
 
         // Create a render sphere to move around to the correct location
+        const previewColour = this.colours[this.playerColours[this.game.playerIndex].toUpperCase()]
         const previewSphereGeometry = new THREE.SphereGeometry(this.SPHERE_RADIUS, this.SPHERE_V_COUNT, this.SPHERE_V_COUNT)
-        //                                                                    // TOOD, player colour
-        const previewSphereMaterial = new THREE.MeshLambertMaterial({color: this.colours.RED, transparent: true})
+        const previewSphereMaterial = new THREE.MeshLambertMaterial({color: previewColour, transparent: true})
         previewSphereMaterial.opacity = 0
-        previewSphereMaterial.emissive.setHex(this.colours.RED) // TOOD, player colour
+        previewSphereMaterial.emissive.setHex(previewColour) // TOOD, player colour
         this.previewSphere = new THREE.Mesh(previewSphereGeometry, previewSphereMaterial)
         this.scene.add(this.previewSphere)
 
@@ -70,7 +72,7 @@ class GameBoard {// eslint-disable-line
 
         this.boardElement.addEventListener("mousemove", event => {
             this.mouse.x = event.clientX / window.innerWidth * 2 - 1
-            this.mouse.y = - event.clientY / window.innerHeight * 2 + 1
+            this.mouse.y = -event.clientY / window.innerHeight * 2 + 1
         }, false)
     }
 
@@ -143,7 +145,7 @@ class GameBoard {// eslint-disable-line
     highlightColumn ({r, c}) {
         for (let b=0; b<this.span; b++) {
             this.boxes[b][r][c].material.opacity = this.OPACITY_ON
-            this.boxes[b][r][c].material.emissive.setHex(this.colours.DARKGRAY)
+            this.boxes[b][r][c].material.emissive.setHex(this.colours.DARKGREY)
             this.highlightedBoxes.push(this.boxes[b][r][c])
         }
     }
@@ -151,7 +153,7 @@ class GameBoard {// eslint-disable-line
     highlightRowX ({b, r}) {
         for (let c=0; c<this.span; c++) {
             this.boxes[b][r][c].material.opacity = this.OPACITY_ON
-            this.boxes[b][r][c].material.emissive.setHex(this.colours.DARKGRAY)
+            this.boxes[b][r][c].material.emissive.setHex(this.colours.DARKGREY)
             this.highlightedBoxes.push(this.boxes[b][r][c])
         }
     }
@@ -159,14 +161,18 @@ class GameBoard {// eslint-disable-line
     highlightRowY ({b, c}) {
         for (let r=0; r<this.span; r++) {
             this.boxes[b][r][c].material.opacity = this.OPACITY_ON
-            this.boxes[b][r][c].material.emissive.setHex(this.colours.DARKGRAY)
+            this.boxes[b][r][c].material.emissive.setHex(this.colours.DARKGREY)
             this.highlightedBoxes.push(this.boxes[b][r][c])
         }
     }
 
     // TEMP, until the gameState is fully bound
     getPreviewPosition (cube) {
-        // if (!this.gravity) {...}
+        // Don't render it if there's already a sphere at that location
+        if (this.spheres[cube.data.b][cube.data.r][cube.data.c]) {
+            return null
+        }
+
         const pos = {
             x : cube.position.x,
             y : cube.position.y,
@@ -175,22 +181,34 @@ class GameBoard {// eslint-disable-line
         return pos
     }
 
+    moveSphere (start, end, axis, location) {
+
+        // Set the new position for the sphere
+        const sphere = this.spheres[start.b][start.r][start.c]
+        sphere.isLerping = true
+        sphere.newPos = {}
+        sphere.newPos.axis = axis
+        sphere.newPos[axis] = (location - this.SPREAD) * this.BOX_WIDTH * this.SPACING
+
+        // Move the spheres in the spheres state
+        this.spheres[end.b][end.r][end.c] = sphere
+        this.spheres[start.b][start.r][start.c] = null
+    }
+
     renderLoop () {
         requestAnimationFrame(() => this.renderLoop())
 
         // Lerp the boxes into position, when exploded
         if (this.isLerpingBoxes) {
-            console.log("this.span", this.span)
             for (let b=0; b<this.span; b++) {
                 for (let r=0; r<this.span; r++) {
                     for (let c=0; c<this.span; c++) {
 
                         if (b!=this.SPREAD && r!=this.SPREAD && c!=this.SPREAD
-                            && Math.abs(this.boxes[b][r][c].position.x - this.boxes[b][r][c].origPos.x * this.explodedMult) < 1e-4
-                            && Math.abs(this.boxes[b][r][c].position.y - this.boxes[b][r][c].origPos.y * this.explodedMult) < 1e-4
-                            && Math.abs(this.boxes[b][r][c].position.z - this.boxes[b][r][c].origPos.z * this.explodedMult) < 1e-4) {
+                            && Math.abs(this.boxes[b][r][c].position.x - this.boxes[b][r][c].origPos.x * this.explodedMult) < 0.05
+                            && Math.abs(this.boxes[b][r][c].position.y - this.boxes[b][r][c].origPos.y * this.explodedMult) < 0.05
+                            && Math.abs(this.boxes[b][r][c].position.z - this.boxes[b][r][c].origPos.z * this.explodedMult) < 0.05) {
 
-                            // console.log("SETTING TO FALSE", b, r, c)
                             this.isLerpingBoxes = false
                         } else {
                             this.boxes[b][r][c].position.x += (this.boxes[b][r][c].origPos.x * this.explodedMult - this.boxes[b][r][c].position.x) / 10
@@ -208,6 +226,8 @@ class GameBoard {// eslint-disable-line
             }
         }
 
+        let someSphereIsLerping = false
+
         // Lerp the spheres into their new place
         for (let b=0; b<this.span; b++) {
             for (let r=0; r<this.span; r++) {
@@ -215,13 +235,16 @@ class GameBoard {// eslint-disable-line
 
                     if (this.spheres[b][r][c] && this.spheres[b][r][c].isLerping) {
 
+                        someSphereIsLerping = true
+
                         const sphere = this.spheres[b][r][c]
                         const {axis} = sphere.newPos
 
-                        if (Math.abs(sphere.position[axis] - sphere.newPos[axis]) > 1e-6) {
+                        if (Math.abs(sphere.position[axis] - sphere.newPos[axis]) > 0.025) {
                             sphere.position[axis] += (sphere.newPos[axis] - sphere.position[axis]) / 10
                         } else {
                             sphere.isLerping = false
+                            sphere.origPos[axis] = sphere.newPos[axis]
                         }
                     }
                 }
@@ -251,8 +274,11 @@ class GameBoard {// eslint-disable-line
                     }, 500)
 
                     // TODO, assign the player colour to the class
-                    // this.addSphere(this.hoveredObject.data.b, this.hoveredObject.data.r, this.hoveredObject.data.c, Math.random() < 0.5 ? this.colours.RED : this.colours.BLUE)
-                    this.addPoint(this.hoveredObject.data.b, this.hoveredObject.data.r, this.hoveredObject.data.c, 0)
+                    const {b, r, c} = this.hoveredObject.data
+
+                    if (this.game.gameState[b][r][c]===" ") {
+                        this.game.makeMove(this.game.playerIndex, b, r, c)
+                    }
                 }
 
             } else {
@@ -264,20 +290,42 @@ class GameBoard {// eslint-disable-line
                 this.clearHighlightedBoxes()
                 if (this.hoveredObject.data) {
                     // Also TODO, decide which one of these to do, based on the current gravity
-                    this.highlightColumn(this.hoveredObject.data)
-                    // this.highlightRowX(this.hoveredObject.data)
-                    // this.highlightRowY(this.hoveredObject.data)
+
+                    if (!this.isLerpingBoxes && !someSphereIsLerping) {
+
+                        switch (this.game.gravity.axis) {
+                            case 0:
+                                this.highlightColumn(this.hoveredObject.data)
+                                break
+                            case 1:
+                                this.highlightRowY(this.hoveredObject.data)
+                                break
+                            case 2:
+                                this.highlightRowX(this.hoveredObject.data)
+                                break
+
+                        }
+
+                        // Render the preview sphere at the correct location
+                        const pos = this.getPreviewPosition(this.hoveredObject)
+
+                        if (pos) {
+                            this.previewSphere.position.x = pos.x
+                            this.previewSphere.position.y = pos.y
+                            this.previewSphere.position.z = pos.z
+                            this.previewSphere.material.opacity = 0.5
+                        }
+                        // === ?
+                        // else {
+                        //     this.previewSphere.material.opacity = 0
+                        // }
+                    }
 
                     // ALSO TODO, do the effect for a single box at a time, when there is no gravity selected
                 }
 
 
-                // Render the preview sphere at the correct location
-                const {x, y, z} = this.getPreviewPosition(this.hoveredObject)
-                this.previewSphere.position.x = x
-                this.previewSphere.position.y = y
-                this.previewSphere.position.z = z
-                this.previewSphere.material.opacity = 0.5
+
             }
 
         } else {
@@ -304,11 +352,20 @@ class GameBoard {// eslint-disable-line
 
     toggleExploded () {
         this.explodedMult = this.explodedMult==1 ? 2 : 1
+        this.previewSphere.material.opacity = 0
         this.isLerpingBoxes = true
     }
 
-    addPoint (board, row, col, player) {
+    addPoint (board, row, col, player, nextPlayer) {
         this.addSphere(board, row, col, this.playerColours[player].toUpperCase())
+        this.previewSphere.material.opacity = 0
+        this.setPreviewColour(nextPlayer)
+    }
+
+    setPreviewColour (playerIndex) {
+        const previewColour = this.colours[this.playerColours[playerIndex].toUpperCase()]
+        this.previewSphere.material.color.setHex(previewColour)
+        this.previewSphere.material.emissive.setHex(previewColour)
     }
 
     render (gameState) {

@@ -34,6 +34,8 @@ class GameLogic {// eslint-disable-line
             backward: 1
         }
 
+        // Randomize who starts
+        this.playerIndex = Math.floor(Math.random()*players)
         this.board = new GameBoard(this)
 
         // Set the first player to either AI or human (aka the actual player)
@@ -56,8 +58,6 @@ class GameLogic {// eslint-disable-line
             }
         }
 
-        // Randomize who starts
-        this.playerIndex = Math.floor(Math.random()*players)
         playerNum.style.color = this.board.playerColours[this.playerIndex]
         this.players[this.playerIndex].pickMove(this.gameState)
     }
@@ -127,7 +127,7 @@ class GameLogic {// eslint-disable-line
         [b, r, c] = this.applyGravityToMove(b, r, c)
 
         this.gameState[b][r][c] = p
-        this.board.addPoint(b, r, c, p)
+        this.board.addPoint(b, r, c, p, (this.playerIndex+1) % this.players.length)
 
         // Player wins
         if (this.isWinningMove(b, r, c, p)) {
@@ -301,6 +301,9 @@ class GameLogic {// eslint-disable-line
 
                                 while (i2<this.span) {
                                     if (i2<this.span && i<this.span && this.gameState[Math.abs(max-i2)][r][c] !== " ") {
+
+                                        this.board.moveSphere({b: Math.abs(max-i2), r, c}, {b: Math.abs(max-i), r, c}, "y", Math.abs(max-i))
+
                                         this.gameState[Math.abs(max-i)][r][c] = this.gameState[Math.abs(max-i2)][r][c]
                                         this.gameState[Math.abs(max-i2)][r][c] = " "
 
@@ -335,6 +338,9 @@ class GameLogic {// eslint-disable-line
 
                                 while (i2<this.span) {
                                     if (i2<this.span && i<this.span && this.gameState[b][r][Math.abs(max-i2)]!==" ") {
+
+                                        this.board.moveSphere({b, r, c: Math.abs(max-i2)}, {b, r, c: Math.abs(max-i)}, "x", Math.abs(max-i))
+
                                         this.gameState[b][r][Math.abs(max-i)] = this.gameState[b][r][Math.abs(max-i2)]
                                         this.gameState[b][r][Math.abs(max-i2)] = " "
 
@@ -371,6 +377,9 @@ class GameLogic {// eslint-disable-line
 
                                 while (i2<this.span) {
                                     if (i2<this.span && i<this.span && this.gameState[b][Math.abs(max-i2)][r]!==" ") {
+
+                                        this.board.moveSphere({b, r: Math.abs(max-i2), c: r}, {b, r: Math.abs(max-i), c: r}, "z", Math.abs(max-i))
+
                                         this.gameState[b][Math.abs(max-i)][r] = this.gameState[b][Math.abs(max-i2)][r]
                                         this.gameState[b][Math.abs(max-i2)][r] = " "
 
@@ -388,9 +397,12 @@ class GameLogic {// eslint-disable-line
                 break
         }
 
-        this.board.render(this.gameState)
         this.checkAll()
+
+        this.board.clearHighlightedBoxes()
+        this.board.setPreviewColour(this.playerIndex)
     }
+
 
     // Check the game status for all placed items (when the gravity is changed, and every item is potentially re-arranged)
     // TODO, optimize this, as this is insanely inefficient
