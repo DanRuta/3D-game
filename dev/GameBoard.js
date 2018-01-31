@@ -4,14 +4,12 @@ class GameBoard {// eslint-disable-line
 
     constructor (game) {
 
-        const {span, gravity, gravityEnabled} = game
+        const {span} = game
 
         this.playerColours = ["blue", "red", "green", "purple", "yellow", "orange", "black", "cyan", "pink", "darkgrey"]
         this.rotation = -45
         this.span = span
         this.game = game // Two way binding
-        this.gravity = gravity
-        this.gravityEnabled = gravityEnabled
 
         // Rendering constants
         this.BOX_WIDTH = 0.5
@@ -101,9 +99,9 @@ class GameBoard {// eslint-disable-line
         const box = new THREE.Mesh(geometry, material)
         box.material.emissive.setHex(this.colours.LIGHTGREY)
 
-        box.position.x = (r - this.SPREAD) * this.BOX_WIDTH * this.SPACING
+        box.position.x = (c - this.SPREAD) * this.BOX_WIDTH * this.SPACING
         box.position.y = (b - this.SPREAD) * this.BOX_WIDTH * this.SPACING
-        box.position.z = (c - this.SPREAD) * this.BOX_WIDTH * this.SPACING
+        box.position.z = (r - this.SPREAD) * this.BOX_WIDTH * this.SPACING
         box.data = {b, r, c}
         box.origPos = {
             x: box.position.x,
@@ -121,9 +119,9 @@ class GameBoard {// eslint-disable-line
         const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
         sphere.material.emissive.setHex(this.colours[colour.toUpperCase()])
 
-        sphere.position.x = (r - this.SPREAD) * this.BOX_WIDTH * this.SPACING
+        sphere.position.x = (c - this.SPREAD) * this.BOX_WIDTH * this.SPACING
         sphere.position.y = (b - this.SPREAD) * this.BOX_WIDTH * this.SPACING
-        sphere.position.z = (c - this.SPREAD) * this.BOX_WIDTH * this.SPACING
+        sphere.position.z = (r - this.SPREAD) * this.BOX_WIDTH * this.SPACING
         sphere.origPos = {
             x: sphere.position.x,
             y: sphere.position.y,
@@ -140,6 +138,7 @@ class GameBoard {// eslint-disable-line
             this.highlightedBoxes[b].material.emissive.setHex(this.colours.LIGHTGREY)
         }
         this.highlightedBoxes = []
+        this.previewSphere.material.opacity = 0
     }
 
     highlightColumn ({r, c}) {
@@ -150,7 +149,7 @@ class GameBoard {// eslint-disable-line
         }
     }
 
-    highlightRowX ({b, r}) {
+    highlightRowY ({b, r}) {
         for (let c=0; c<this.span; c++) {
             this.boxes[b][r][c].material.opacity = this.OPACITY_ON
             this.boxes[b][r][c].material.emissive.setHex(this.colours.DARKGREY)
@@ -158,7 +157,7 @@ class GameBoard {// eslint-disable-line
         }
     }
 
-    highlightRowY ({b, c}) {
+    highlightRowX ({b, c}) {
         for (let r=0; r<this.span; r++) {
             this.boxes[b][r][c].material.opacity = this.OPACITY_ON
             this.boxes[b][r][c].material.emissive.setHex(this.colours.DARKGREY)
@@ -277,6 +276,7 @@ class GameBoard {// eslint-disable-line
                     const {b, r, c} = this.hoveredObject.data
 
                     if (this.game.gameState[b][r][c]===" ") {
+                        console.log("making move", b, r, c)
                         this.game.makeMove(this.game.playerIndex, b, r, c)
                     }
                 }
@@ -285,25 +285,31 @@ class GameBoard {// eslint-disable-line
 
                 // Set the currently hovered over object
                 this.hoveredObject = intersects[0].object.data ? intersects[0].object : intersects[0].object.parent
-
-                // TODO, only do this if the highlighted section will change
                 this.clearHighlightedBoxes()
+
                 if (this.hoveredObject.data) {
                     // Also TODO, decide which one of these to do, based on the current gravity
 
                     if (!this.isLerpingBoxes && !someSphereIsLerping) {
 
-                        switch (this.game.gravity.axis) {
-                            case 0:
-                                this.highlightColumn(this.hoveredObject.data)
-                                break
-                            case 1:
-                                this.highlightRowY(this.hoveredObject.data)
-                                break
-                            case 2:
-                                this.highlightRowX(this.hoveredObject.data)
-                                break
-
+                        if (this.game.gravityEnabled) {
+                            switch (this.game.gravity.axis) {
+                                case 0:
+                                    this.highlightColumn(this.hoveredObject.data)
+                                    break
+                                case 1:
+                                    this.highlightRowY(this.hoveredObject.data)
+                                    break
+                                case 2:
+                                    this.highlightRowX(this.hoveredObject.data)
+                                    break
+                            }
+                        } else {
+                            // Highlight only the hovered over box
+                            const {b, r, c} = this.hoveredObject.data
+                            this.boxes[b][r][c].material.opacity = this.OPACITY_ON
+                            this.boxes[b][r][c].material.emissive.setHex(this.colours.DARKGREY)
+                            this.highlightedBoxes.push(this.boxes[b][r][c])
                         }
 
                         // Render the preview sphere at the correct location
@@ -320,12 +326,7 @@ class GameBoard {// eslint-disable-line
                         //     this.previewSphere.material.opacity = 0
                         // }
                     }
-
-                    // ALSO TODO, do the effect for a single box at a time, when there is no gravity selected
                 }
-
-
-
             }
 
         } else {
@@ -346,7 +347,6 @@ class GameBoard {// eslint-disable-line
 
             }
             this.hoveredObject = null
-
         }
     }
 
@@ -394,14 +394,6 @@ class GameBoard {// eslint-disable-line
             }
         }
     }
-
-    // Highlight the column/row/vertical-column that will be affected by a move
-    // styleHoverPreview (board, row, col) {
-
-
-
-    // }
-
 
     rotate () {
         this.camera.position.x = Math.sin(this.rotation*Math.PI/180) * (this.BOX_WIDTH * 1.5) * this.span * 2
