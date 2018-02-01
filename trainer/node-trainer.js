@@ -8,6 +8,7 @@ const {GameLogic} = require("./GameLogic.js")
 const {GamePlayer} = require("./GamePlayer.js")
 const db = require("../game-MongoDB")
 
+let deleteData = false
 let doTraining = true
 let reader
 let epsilon = 0.5
@@ -28,6 +29,11 @@ for (let a=0; a<args.length; a++) {
 
         case "-t":
             doTraining = args[a+1].trim().toLowerCase()=="y"
+
+            if (args[a+1].trim().toLowerCase()=="d") {
+                deleteData = true
+            }
+
             a++
             break
 
@@ -52,13 +58,14 @@ global.GameBoard = class GameBoard {
     addPoint () {this.render(this.game.gameState)}
     render (gameState) {
         if (!this.game.isTraining) {
+            let g = gameState
             console.log(
 `
- ${gameState[0][0][0]} | ${gameState[0][0][1]} | ${gameState[0][0][2]}
- __________
- ${gameState[0][1][0]} | ${gameState[0][1][1]} | ${gameState[0][1][2]}
- __________
- ${gameState[0][2][0]} | ${gameState[0][2][1]} | ${gameState[0][2][2]}
+ ${g[0][0][0]} | ${g[0][0][1]} | ${g[0][0][2]}\t${g[1][0][0]} | ${g[1][0][1]} | ${g[1][0][2]}\t${g[2][0][0]} | ${g[2][0][1]} | ${g[2][0][2]}
+ __________\t__________\t__________
+ ${g[0][1][0]} | ${g[0][1][1]} | ${g[0][1][2]}\t${g[1][1][0]} | ${g[1][1][1]} | ${g[1][1][2]}\t${g[2][1][0]} | ${g[2][1][1]} | ${g[2][1][2]}
+ __________\t__________\t__________
+ ${g[0][2][0]} | ${g[0][2][1]} | ${g[0][2][2]}\t${g[1][2][0]} | ${g[1][2][1]} | ${g[1][2][2]}\t${g[2][2][0]} | ${g[2][2][1]} | ${g[2][2][2]}
 `)
         }
     }
@@ -73,7 +80,12 @@ global.game = new GameLogic({
 })
 game.db = db
 
-if (doTraining) {
+if (deleteData) {
+
+    db.deleteAllQ().then(() => console.log("data deleted"))
+
+} else if (doTraining) {
+
     const start = Date.now()
     game.trainAI({epochs, epsilon})
     console.log(`Training duration: ${Date.now() - start}`)
@@ -84,24 +96,18 @@ if (doTraining) {
     const qs = []
 
     for (let k=0; k<keys.length; k++) {
-        qs[k] = {key: keys[k], value: game.players[0].q[keys[k]]}
+        qs[k] = {key: keys[k]}
+        Object.keys(game.players[0].q[keys[k]]).forEach(action => {
+            qs[k][action] = game.players[0].q[keys[k]][action]
+        })
     }
 
+    console.log(qs.length, "states")
     db.setManyQ(qs).then(() => console.log("Done"))
     game.TEMPReset(true)
 
 } else {
-    db.deleteAllQ()
-    db.countQ().then(c => console.log(`Total count: ${c}`))
-
-
-    // db.updateQ('1                          001', 20) // 0.97
-    // db.getAllQ().then(data => {
-
-    //     console.log("data.length", data.length)
-    //     console.log(data[0])
-    //     console.log(data.find(r => r.key == '1                          001'))
-
-        game.TEMPReset(true)
-    // })
+    db.countQ().then(c => console.log(`Total records count: ${c}`))
+    game.players[1] = new GamePlayer("local human", 1, global.game)
+    game.TEMPReset(true)
 }

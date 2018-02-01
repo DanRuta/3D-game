@@ -38,7 +38,8 @@ module.exports.getQ = async (key) => {
   const db = await connectDB()
 
   const q = db.collection("q")
-  const result = await q.find({key}, {value: 1, _id: 0}).toArray()
+  // const result = await q.find({key}, {value: 1, _id: 0}).toArray()
+  const result = await q.find({key}, {_id: 0}).toArray()
   return result
 }
 
@@ -50,21 +51,21 @@ module.exports.batchGetQ = async (keys) => {
   return result
 }
 
-module.exports.setQ = async (key, value) => {
-  const db = await connectDB()
+// module.exports.setQ = async (key, value) => {
+//   const db = await connectDB()
 
-  const q = db.collection("q")
-  const result = await q.insert({key, value})
-  return result
-}
+//   const q = db.collection("q")
+//   const result = await q.insert({key, value})
+//   return result
+// }
 
-module.exports.updateQ = async (key, value) => {
-  const db = await connectDB()
+// module.exports.updateQ = async (key, value) => {
+//   const db = await connectDB()
 
-  const q = db.collection("q")
-  const result = await q.updateOne({key}, {$set: {value}})
-  return result
-}
+//   const q = db.collection("q")
+//   const result = await q.updateOne({key}, {$set: {value}})
+//   return result
+// }
 
 module.exports.setManyQ = async (records) => {
   const db = await connectDB()

@@ -15,7 +15,6 @@ class GamePlayer {// eslint-disable-line
             this.epsilon = epsilon
             this.alpha = alpha
             this.gamma = gamma
-            // this.lastState = game.gameState.slice(0)
             this.lastState = JSON.parse(JSON.stringify(game.gameState))
             this.lastMove = undefined
         }
@@ -33,17 +32,23 @@ class GamePlayer {// eslint-disable-line
     }
 
     getQ (state, action, useDB) {
-        const key = state.join("").replace(/,/g,"") + action.toString().replace(/,/g, "")
+        const key = state.join("").replace(/,/g,"")
 
         if (useDB) {
-            return game.db.getQ(key)
+            return this.game.db.getQ(key)
         } else {
 
-            if (this.q[key]==undefined) {
-                this.q[key] = 1
+            action = action.toString().replace(/,/g, "")
+
+            if (this.q[key]===undefined) {
+                this.q[key] = {}
             }
 
-            return this.q[key]
+            if (this.q[key][action]===undefined) {
+                this.q[key][action] = 1
+            }
+
+            return this.q[key][action]
         }
     }
 
@@ -77,11 +82,12 @@ class GamePlayer {// eslint-disable-line
                 global.reader.close()
 
                 const val = parseInt(response)-1
-                const r = parseInt(val/3)
+                const b = parseInt(val/9)
+                const r = parseInt((val-b*9)/3)
                 const c = val%3
-                console.log("r c", r, c)
+                console.log("b r c", b, r, c)
 
-                global.game.makeMove(this.playerIndex, 0, r, c)
+                this.game.makeMove(this.playerIndex, b, r, c)
             })
 
         } else {
@@ -104,20 +110,36 @@ class GamePlayer {// eslint-disable-line
                 }
 
             if (this.game.useDB) {
-                const queries = []
 
-                for (let m=0; m<moves.length; m++) {
-                    queries.push(this.getQ(this.lastState, moves[m], true))
-                }
+                this.getQ(this.lastState, null, true).then(qs => {
+                    // console.log("QS", qs, qs[0])
+                    console.log("qs:", qs ? qs.length : qs)
+                    qs = qs[0]
 
-                Promise.all(queries).then(qs => {
-                    qs = qs.map(record => record[0].value)
-                    // console.log("qs", qs)
-                    // console.log("acc qs", [...new Array(moves.length)].map((_, i) => this.getQ(this.lastState, moves[i], false)))
-                    const maxQ = qs.slice(0).sort().reverse()[0]
+                    // No knowledge of this state. Set to 1 and make a random move
+                    if (qs===undefined) {
 
-                    this.lastMove = moves[qs.indexOf(maxQ)]
-                    this.game.makeMove(this.playerIndex, this.lastMove[0], this.lastMove[1], this.lastMove[2])
+                        console.log("dunno lol")
+
+                        // console.log(moves)
+                        const move = moves[Math.floor(Math.random()*moves.length)]
+                        this.lastMove = move
+                        // TODO, set to 1
+
+                        this.game.makeMove(this.playerIndex, this.lastMove[0], this.lastMove[1], this.lastMove[2])
+
+                    } else {
+
+                        delete qs.key
+                        delete qs._id
+
+                        const moves = Object.keys(qs)
+                        const qVals = Object.values(qs)
+                        const maxQ = qVals.slice(0).sort().reverse()[0]
+
+                        this.lastMove = moves[qVals.indexOf(maxQ)].split("").map(d => parseInt(d))
+                        this.game.makeMove(this.playerIndex, this.lastMove[0], this.lastMove[1], this.lastMove[2])
+                    }
                 })
             } else {
 
@@ -148,8 +170,9 @@ class GamePlayer {// eslint-disable-line
                 maxqNew = Math.max(maxqNew, this.getQ(gameState, aMoves[a]))
             }
 
-            const key = this.lastState.join("").replace(/,/g,"") + this.lastMove.toString().replace(/,/g, "")
-            this.q[key] = prev + this.alpha * (value + this.gamma * maxqNew - prev)
+            const key = this.lastState.join("").replace(/,/g,"")
+            const action = this.lastMove.toString().replace(/,/g, "")
+            this.q[key][action] = prev + this.alpha * (value + this.gamma * maxqNew - prev)
         }
     }
 

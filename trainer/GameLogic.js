@@ -39,7 +39,7 @@ class GameLogic {// eslint-disable-line
 
 
         // Set the first player to either AI or human (aka the actual player)
-        if (this.isTraining) {
+        if (this.aiOpponent) {
             this.players.push(new GamePlayer("AI", 0, this))
         } else {
             this.players.push(new GamePlayer("local human", 0))
@@ -111,7 +111,7 @@ class GameLogic {// eslint-disable-line
 
         // Illegal move
         if (this.gameState[b][r][c] !== " ") {
-            console.log("Illegal move")
+            console.log("Illegal move", b, r, c)
 
             // Slap its hands, if it was an AI player
             this.players[p].reward(-99, this.gameState)
@@ -125,8 +125,6 @@ class GameLogic {// eslint-disable-line
 
             return
         }
-
-        [b, r, c] = this.applyGravityToMove(b, r, c)
 
         this.gameState[b][r][c] = p
         this.board.addPoint(b, r, c, p)
@@ -187,7 +185,7 @@ class GameLogic {// eslint-disable-line
 
         console.log("Training finished", Object.keys(this.players[0].q).length, Object.keys(this.players[1].q).length)
         this.isTraining = false
-        this.players[1] = new GamePlayer("local human", 0)
+        this.players[1] = new GamePlayer("local human", 1, this)
         this.players[0].epsilon = 0
         this.playerIndex = 0
     }
@@ -264,177 +262,6 @@ class GameLogic {// eslint-disable-line
         return true
     }
 
-    applyGravityToMove (board, row, col) {
-
-        if (!this.gravityEnabled) return [board, row, col]
-
-        let counts
-
-        switch (this.gravity.axis) {
-            // Up/Down
-            case 0:
-                counts = this.gravity.modifier==-1 ? board : this.span-1-board
-
-                for (let i=0; i<counts; i++) {
-                    if (this.gameState[board + this.gravity.modifier][row][col]===" ") {
-                        board += this.gravity.modifier
-                    } else {
-                        break
-                    }
-                }
-                break
-            // Left/Right
-            case 1:
-
-                counts = this.gravity.modifier==-1 ? col : this.span-1-col
-
-                for (let i=0; i<counts; i++) {
-                    if (this.gameState[board][row][col + this.gravity.modifier]===" ") {
-                        col += this.gravity.modifier
-                    } else {
-                        break
-                    }
-                }
-                break
-            // Forward/Backward
-            case 2:
-
-                counts = this.gravity.modifier==-1 ? row : this.span-1-row
-
-                for (let i=0; i<counts; i++) {
-                    if (this.gameState[board][row + this.gravity.modifier][col]===" ") {
-                        row += this.gravity.modifier
-                    } else {
-                        break
-                    }
-                }
-                break
-        }
-
-        return [board, row, col]
-    }
-
-    /*
-        TODO, there's a bug where some points don't move as needed. I think this may be due
-        to the order in which the tiles are moved
-    */
-    shiftGravity (direction) {
-
-        this.gravity.axis = this.directions[direction]
-        this.gravity.modifier = this.modifiers[direction]
-
-        const max = Math.abs((this.gravity.modifier==-1 ? this.span-1 : 0)-(this.span-1))
-
-        switch (this.gravity.axis) {
-
-            // Up/Down (boards)
-            case 0:
-                // For every row
-                for (let r=0; r<this.span; r++) {
-                    // For every column
-                    for (let c=0; c<this.span; c++) {
-
-                        let i2 = 0
-
-                        everyBoard:
-                        for (let i=0; i<this.span; i++) {
-
-                            if (this.gameState[Math.abs(max-i)][r][c]===" ") {
-
-                                i2 = i+1
-
-                                while (i2<this.span) {
-                                    if (i2<this.span && i<this.span && this.gameState[Math.abs(max-i2)][r][c] !== " ") {
-                                        this.gameState[Math.abs(max-i)][r][c] = this.gameState[Math.abs(max-i2)][r][c]
-                                        this.gameState[Math.abs(max-i2)][r][c] = " "
-
-                                        i += i2
-                                    }
-
-                                    i2++
-                                }
-                                break everyBoard
-                            }
-                        }
-                    }
-                }
-                break
-
-            // Left/Right (columns)
-            case 1:
-
-                // For every board
-                for (let b=0; b<this.span; b++) {
-                    // For every row
-                    for (let r=0; r<this.span; r++) {
-
-                        let i2 = 0
-
-                        everyColumn:
-                        for (let i=0; i<this.span; i++) {
-
-                            if (this.gameState[b][r][Math.abs(max-i)]===" ") {
-
-                                i2 = i+1
-
-                                while (i2<this.span) {
-                                    if (i2<this.span && i<this.span && this.gameState[b][r][Math.abs(max-i2)]!==" ") {
-                                        this.gameState[b][r][Math.abs(max-i)] = this.gameState[b][r][Math.abs(max-i2)]
-                                        this.gameState[b][r][Math.abs(max-i2)] = " "
-
-                                        i += i2
-                                    }
-
-                                    i2++
-                                }
-                                break everyColumn
-                            }
-
-                        }
-
-                    }
-                }
-                break
-
-            // Forward/Backward (rows)
-            case 2:
-
-                // For every board
-                for (let b=0; b<this.span; b++) {
-                    // For every row
-                    for (let r=0; r<this.span; r++) {
-
-                        let i2 = 0
-
-                        everyColumn:
-                        for (let i=0; i<this.span; i++) {
-
-                            if (this.gameState[b][Math.abs(max-i)][r]===" ") {
-
-                                i2 = i+1
-
-                                while (i2<this.span) {
-                                    if (i2<this.span && i<this.span && this.gameState[b][Math.abs(max-i2)][r]!==" ") {
-                                        this.gameState[b][Math.abs(max-i)][r] = this.gameState[b][Math.abs(max-i2)][r]
-                                        this.gameState[b][Math.abs(max-i2)][r] = " "
-
-                                        i += i2
-                                    }
-
-                                    i2++
-                                }
-                                break everyColumn
-                            }
-                        }
-                    }
-                }
-
-                break
-        }
-
-        this.board.render(this.gameState)
-        this.checkAll()
-    }
 
     // Check the game status for all placed items (when the gravity is changed, and every item is potentially re-arranged)
     // TODO, optimize this, as this is insanely inefficient
@@ -470,5 +297,4 @@ class GameLogic {// eslint-disable-line
 
 }
 
-typeof window!="undefined" && (window.GameLogic = GameLogic)
 exports.GameLogic = GameLogic

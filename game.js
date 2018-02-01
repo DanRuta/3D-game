@@ -24,43 +24,6 @@ const index = (request, response) => {
 }
 
 
-// old. to be removed/changed
-const userArea = (request, response) => {
-
-    let user
-    const username = request.url.split("/users/")[1].toLowerCase()
-
-    for (let userIndex in usersData) {
-
-        const currentUser = usersData[userIndex]
-
-        if (currentUser.username.toLowerCase().replace(/\s/g,"-")==username) {
-            user = userIndex
-            break
-        }
-    }
-
-
-    if (!user) return returnError(response, "404")
-
-    let imagePaths=[]
-
-    try {
-        imagePaths = fs.readdirSync(`./screenshots/${user}`)
-                       .map(fileName => {return {path: `screenshots/${user}/${fileName}`}})
-    } catch(e) {}
-
-    sendData({request, response, code: 200, data: pug.renderFile("./userArea.pug", {
-        username: usersData[user].username,
-        userId: user,
-        scribbles: imagePaths,
-        plural: (!imagePaths.length || imagePaths.length>1) ? "s" : "",
-        googleClientId
-    }), contentType: "text/html"})
-}
-
-
-
 // POST
 // ====
 const getAIMove = async (request, response, {gameState}) => {
@@ -68,35 +31,35 @@ const getAIMove = async (request, response, {gameState}) => {
     const moves = getAvailableMoves(gameState)
     const key = gameState.join("").replace(/,/g,"")
 
-    db.batchGetQ(moves.map(move => key + move.toString().replace(/,/g, "")))
-    .then(qs => {
-        // Need to keep the same number of records, even when only, eg, half exist for a
-        // given set of keys, defaulting to 1 when not existent. However, when there's some
-        // missing records, the returned values no longer match up to the queried moves
-        // So here, I'm re-matching them up to the correct moves
-        const qVals = [...new Array(moves.length)].map(() => 1)
+    db.getQ(key).then(qs => {
+        console.log("qs:", qs ? qs.length : qs, "for:", key)
 
-        for (let m=0; m<moves.length; m++) {
-            const q = qs.find(q => q.key.endsWith(moves[m].toString().replace(/,/g, "")))
+        let move
+        qs = qs[0]
 
-            if (q) {
-                qVals[qs.indexOf(q)] = q.value
-            } else {
-                // Set the missing values to 1, in the database
-                db.setQ(key + moves[mi].toString().replace(/,/g, ""), 1)
-            }
+        // No knowledge of this state. Set to 1 and make a random move
+        if (qs===undefined) {
 
+            console.log("dunno lol")
+            // TODO, set the db value to 1
+            move = moves[Math.floor(Math.random()*moves.length)]
+
+        } else {
+            delete qs.key
+            delete qs._id
+
+            const qVals = moves.map(m => qs[m.toString().replace(/,/g, "")])
+            const maxQ = qVals.slice(0).sort().reverse()[0]
+
+            move = moves[qVals.indexOf(maxQ)]
         }
-
-        const maxQ = qVals.slice(0).sort().reverse()[0]
-        const move = moves[qVals.indexOf(maxQ)]
 
         sendData({request, response, code: 200, data: JSON.stringify({move})})
     })
 }
 
 const rewardAI = (request, response, {value, gameState}) => {
-    // TODO, lastState+lastMove
+    // TODO, train AI as people play the game
     sendData({request, response, code: 200, data: "{}"})
 }
 
@@ -124,19 +87,6 @@ const createRoom = async(request, response, {roomName}) => {
     sendData({request, response, code: 200, data: JSON.stringify({roomName: responseData}), contentType: "text/plain"})
 }
 
-const createEditRoom = async(request, response, {roomName}) => {
-
-    let responseData, counter
-
-    // Check if the room name is available. If not, incrementally assign a suffix number to it
-    do {
-        responseData = roomName+(counter ? counter : "")
-        counter = counter ? counter+1 : 1
-
-    } while (rooms.includes(responseData))
-
-    sendData({request, response, code: 200, data: JSON.stringify({roomName: responseData}), contentType: "text/plain"})
-}
 
 const tokenSignin = async (request, response, {authenticator, token, roomName}) => {
 
@@ -343,15 +293,11 @@ const getAvailableMoves = gameState => {
     const moves = []
     const span = gameState[0].length
 
-    console.log("checking", gameState, span)
-
     for (let b=0; b<span; b++) {
         for (let r=0; r<span; r++) {
             for (let c=0; c<span; c++) {
                 if (Number.isNaN(parseInt(gameState[b][r][c]))) {
-                // if (Number.isNaN(parseInt(gameState[0][r][c]))) {
                     moves.push([b, r, c])
-                    // moves.push([0, r, c])
                 }
             }
         }
@@ -371,7 +317,6 @@ exports.initProject = ({sendDataCallback, error}) => {
     return {
         get: {
             [/$/] : index,
-            [/users\/[^\/]+$/] : userArea
         },
         post: {
             [/getAIMove/] : getAIMove,
@@ -379,7 +324,7 @@ exports.initProject = ({sendDataCallback, error}) => {
 
             [/roomExists/] : roomExists,
             [/createRoom/] : createRoom,
-            [/createEditRoom/] : createEditRoom,
+
             [/tokenSignin/] : tokenSignin,
             [/changeUsername/] : changeUsername
         },
