@@ -165,18 +165,72 @@ class GameBoard {// eslint-disable-line
         }
     }
 
-    // TEMP, until the gameState is fully bound
     getPreviewPosition (cube) {
-        // Don't render it if there's already a sphere at that location
-        if (this.spheres[cube.data.b][cube.data.r][cube.data.c]) {
-            return null
-        }
 
+        const incr = this.game.gravity.modifier
         const pos = {
             x : cube.position.x,
             y : cube.position.y,
             z : cube.position.z
         }
+
+        pos.b = cube.data.b
+        pos.r = cube.data.r
+        pos.c = cube.data.c
+
+        switch (this.game.gravity.axis) {
+            // up/down
+            case 0:
+                // Column full
+                if (this.spheres[incr==-1 ? this.span-1 : 0][cube.data.r][cube.data.c]) {
+                    return null
+                }
+
+                pos.b = incr==-1 ? 0 : this.span-1
+
+                while (this.spheres[pos.b][cube.data.r][cube.data.c]) {
+                    pos.b -= incr
+                }
+
+                pos.y = (pos.b - this.SPREAD) * this.BOX_WIDTH * this.SPACING
+                break
+
+            // left/right
+            case 1:
+                // Row full
+                if (this.spheres[cube.data.b][cube.data.r][incr==-1 ? this.span-1 : 0]) {
+                    return null
+                }
+
+                pos.c = incr==-1 ? 0 : this.span-1
+
+                while (this.spheres[cube.data.b][cube.data.r][pos.c]) {
+                    pos.c -= incr
+                }
+
+                pos.x = (pos.c - this.SPREAD) * this.BOX_WIDTH * this.SPACING
+                break
+            case 2:
+                // Row full
+                if (this.spheres[cube.data.b][incr==-1 ? this.span-1 : 0][cube.data.c]) {
+                    return null
+                }
+
+                pos.r = incr==-1 ? 0 : this.span-1
+
+                while (this.spheres[cube.data.b][pos.r][cube.data.c]) {
+                    pos.r -= incr
+                }
+
+                pos.z = (pos.r - this.SPREAD) * this.BOX_WIDTH * this.SPACING
+                break
+        }
+
+        // Don't render it if there's already a sphere at that location
+        if (this.spheres[pos.b][pos.r][pos.c]) {
+            return null
+        }
+
         return pos
     }
 
@@ -204,9 +258,7 @@ class GameBoard {// eslint-disable-line
                     for (let c=0; c<this.span; c++) {
 
                         if (b!=this.SPREAD && r!=this.SPREAD && c!=this.SPREAD
-                            && Math.abs(this.boxes[b][r][c].position.x - this.boxes[b][r][c].origPos.x * this.explodedMult) < 0.05
-                            && Math.abs(this.boxes[b][r][c].position.y - this.boxes[b][r][c].origPos.y * this.explodedMult) < 0.05
-                            && Math.abs(this.boxes[b][r][c].position.z - this.boxes[b][r][c].origPos.z * this.explodedMult) < 0.05) {
+                            && Math.abs(this.boxes[b][r][c].position.x - this.boxes[b][r][c].origPos.x * this.explodedMult) < 0.05) {
 
                             this.isLerpingBoxes = false
                         } else {
@@ -272,11 +324,9 @@ class GameBoard {// eslint-disable-line
                         }
                     }, 500)
 
-                    // TODO, assign the player colour to the class
-                    const {b, r, c} = this.hoveredObject.data
+                    const {b, r, c} = this.previewSphere.data
 
                     if (this.game.gameState[b][r][c]===" ") {
-                        console.log("making move", b, r, c)
                         this.game.makeMove(this.game.playerIndex, b, r, c)
                     }
                 }
@@ -319,6 +369,11 @@ class GameBoard {// eslint-disable-line
                             this.previewSphere.position.x = pos.x
                             this.previewSphere.position.y = pos.y
                             this.previewSphere.position.z = pos.z
+                            this.previewSphere.data = {
+                                b: pos.b,
+                                r: pos.r,
+                                c: pos.c
+                            }
                             this.previewSphere.material.opacity = 0.5
                         }
                         // === ?
