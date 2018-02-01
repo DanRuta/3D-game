@@ -44,6 +44,7 @@ class GamePlayer {// eslint-disable-line
                 this.q[key] = {}
             }
 
+            // TODO - fill all action permutations with 1 values, instead of just this action
             if (this.q[key][action]===undefined) {
                 this.q[key][action] = 1
             }
@@ -174,6 +175,140 @@ class GamePlayer {// eslint-disable-line
             const action = this.lastMove.toString().replace(/,/g, "")
             this.q[key][action] = prev + this.alpha * (value + this.gamma * maxqNew - prev)
         }
+    }
+
+    // up/down
+    mirrorB (gameState) {
+
+        for (let i=0; i<Math.floor(this.game.span/2); i++) {
+            const temp = gameState[i]
+            gameState[i] = gameState[this.game.span-1-i]
+            gameState[this.game.span-1-i] = temp
+        }
+
+        return gameState
+    }
+
+    // forward/backward
+    mirrorY (gameState) {
+
+        for (let b=0; b<this.game.span; b++) {
+            for (let i=0; i<Math.floor(this.game.span/2); i++) {
+                const temp = gameState[b][i]
+                gameState[b][i] = gameState[b][this.game.span-1-i]
+                gameState[b][this.game.span-1-i] = temp
+            }
+        }
+
+        return gameState
+    }
+
+    // left/right
+    mirrorX (gameState) {
+        for (let b=0; b<this.game.span; b++) {
+            for (let r=0; r<this.game.span; r++) {
+                for (let i=0; i<Math.floor(this.game.span/2); i++) {
+                    const temp = gameState[b][r][i]
+                    gameState[b][r][i] = gameState[b][r][this.game.span-1-i]
+                    gameState[b][r][this.game.span-1-i] = temp
+                }
+            }
+        }
+        return gameState
+    }
+
+    // diagonal board down
+    mirrorBDown (gameState) {
+        for (let y=0; y<this.game.span; y++) {
+            for (let b=0; b<this.game.span-1; b++) {
+                for (let c=0; c<this.game.span-1-b; c++) {
+                    const temp = gameState[b][y][c]
+                    gameState[b][y][c] = gameState[this.game.span-1-c][y][this.game.span-1-b]
+                    gameState[this.game.span-1-c][y][this.game.span-1-b] = temp
+                }
+            }
+        }
+        return gameState
+    }
+
+    // diagonal board up
+    mirrorBUp (gameState) {
+        for (let y=0; y<this.game.span; y++) {
+            for (let b=this.game.span-1; b>=0; b--) {
+                for (let c=this.game.span-1; c>b; c--) {
+                    const temp = gameState[b][y][c]
+                    gameState[b][y][c] = gameState[c][y][b]
+                    gameState[c][y][b] = temp
+                }
+            }
+        }
+        return gameState
+    }
+
+    // diagonal rows down (forward)
+    mirrorRDown (gameState) {
+        for (let b=0; b<this.game.span; b++) {
+            for (let r=this.game.span-1; r>b; r--) {
+                const temp = gameState[b][r]
+                gameState[b][r] = gameState[r][b]
+                gameState[r][b] = temp
+            }
+        }
+        return gameState
+    }
+
+    // diagonal rows up (forward)
+    mirrorRUp (gameState) {
+        for (let b=0; b<this.game.span; b++) {
+            for (let r=0; r<this.game.span-1-b; r++) {
+                const temp = gameState[b][r]
+                gameState[b][r] = gameState[this.game.span-1-r][this.game.span-1-b]
+                gameState[this.game.span-1-r][this.game.span-1-b] = temp
+            }
+        }
+        return gameState
+    }
+
+    // diagonal columns (right)
+    mirrorRight (gameState) {
+        for (let b=0; b<this.game.span; b++) {
+            for (let r=0; r<this.game.span-1; r++) {
+                for (let c=0; c<this.game.span-1-r; c++) {
+                    const temp = gameState[b][r][c]
+                    gameState[b][r][c] = gameState[b][this.game.span-1-c][this.game.span-1-r]
+                    gameState[b][this.game.span-1-c][this.game.span-1-r] = temp
+                }
+            }
+        }
+        return gameState
+    }
+
+    // diagonal columns (left)
+    mirrorLeft (gameState) {
+        for (let b=0; b<this.game.span; b++) {
+            for (let r=this.game.span-1; r>0; r--) {
+                for (let c=0; c<this.game.span-1; c++) {
+                    const temp = gameState[b][r][c]
+                    gameState[b][r][c] = gameState[b][c][r]
+                    gameState[b][c][r] = temp
+                }
+            }
+        }
+        return gameState
+    }
+
+
+
+    rotateB (gameState, deg) {
+
+    }
+
+    rotateR (gameState, deg) {
+
+    }
+
+    rotateC (gameState, deg) {
+
     }
 
 }

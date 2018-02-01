@@ -7,9 +7,12 @@
   "license": "ISC",
   "scripts": {
     "start": "set NODE_ENV=production && node server.js",
-    "devstart": "node server.js dev"
+    "devstart": "node server.js dev",
+    "test": "mocha tests.js"
   },
   "devDependencies": {
+    "mocha": "^3.4.2",
+    "chai": "3.5.0",
     "eslint": "^4.11.0",
     "grunt": "^1.0.1",
     "grunt-cli": "^1.2.0",
