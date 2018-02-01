@@ -1,0 +1,449 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <title>T^3 | Play AI Game</title>
+    <meta name="description" content="tic tac toe game">
+    <meta name="author" content="Group 14">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <link rel="stylesheet" href="/css/style.min.css">
+    <meta charset="utf8"/>
+    <script src="three.min.js"></script>
+    <script src="dist/game.min.js"></script>
+
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
+    <![endif]-->
+    <style>
+    body {
+        overflow: hidden;
+    }
+    #title {
+        margin-top: 10px !important;
+        margin-bottom: 10px !important;
+    }
+    #rendererDomElement {
+        margin-left: 0px;
+        position: fixed;
+        left: 10%;
+        top: 10%;
+        z-index: 1;
+    }
+    #arrowsContainer {
+        position: relative;
+        /*margin-left: -15%;*/
+        margin-top: -15%;
+        z-index: 2;
+    }
+    footer {
+        bottom: -30px;
+        position: fixed;
+        width: 100%
+    }
+    </style>
+    <script>
+    "use strict"
+    let ws
+    let roomNameValue
+
+    window.getParameters = () => {
+        const parameters = {}
+
+        // Pull query parameters from url
+        let parametersString = location.search.substring(1)
+
+        parametersString.length ? parametersString.split("&").forEach(p => {
+            const [k,v] =  p.split("=")
+            parameters[k] = v
+        }) : null;
+
+        return parameters
+    }
+
+    window.addEventListener("load", () => {
+
+        let isRotating = false
+        let rotation = 45
+        let mouseIsDown = false
+        let isRotatingTimeout
+
+        resetButton.addEventListener("click", () => {
+            content.innerHTML = ""
+
+            const {g, span, p} = getParameters()
+
+            window.game = new GameLogic({
+                gravityEnabled: !g || g=="1",
+                span: parseInt(span) || 3,
+                players: parseInt(p) || 2,
+                // isTraining: false,
+                // aiOpponent: aiOpponentCheckbox.checked,
+                // isMultiplayer: false
+            })
+            content.appendChild(game.board.boardElement)
+        })
+        resetButton.click()
+
+        // roomNameValue = roomName.value.trim()
+
+        // if (roomNameValue !== "") {
+        //     connectWebSockets()
+        // }
+
+        // Arrows stuff
+        const initArrows = () => {
+
+            let hoveredObject
+            let clickedObject
+            const WHITE = 0xaaaaaa
+            const YELLOW = 0xaaaa00
+            const CYAN = 0x00aaaa
+            const arrowModels = []
+            const arrowNames = ["left", "right", "up", "down", "forward", "backward"]
+            const rotations = [
+                {x: 0.25, y: 0.0, z: 0}, // left
+                {x: 0.25, y: 0.50, z: 0}, // right
+                {x: 0.25, y: 0.75, z: 0}, // up
+                {x: 0.25, y: 0.25, z: 0}, // down
+                {x: 0.25, y: 0.50, z: 0.25}, // forward
+                {x: 0.25, y: 0.50, z: 0.75}, // backward
+            ]
+            const positions = [
+                {x: -0.125, y: 0, z: 0}, // left
+                {x: 0.125, y: 0, z: 0}, // right
+                {x: 0, y: 0.1, z: 0}, // up
+                {x: 0, y: -0.1, z: 0}, // down
+                {x: 0, y: 0, z: -0.125}, // forward
+                {x: 0, y: 0, z: 0.125}, // backward
+            ]
+
+            const scene = new THREE.Scene()
+            const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000)
+            camera.position.z = 4
+            camera.position.y = 2
+            const renderer = new THREE.WebGLRenderer({alpha: true, antialias: true})
+            renderer.setPixelRatio( window.devicePixelRatio )
+            renderer.setSize(400, 400)
+            renderer.domElement.id = "arrowsCanvas"
+            arrowsContainer.appendChild(renderer.domElement)
+
+            const loader = new THREE.ObjectLoader()
+            const raycaster = new THREE.Raycaster()
+            const mouse = new THREE.Vector2()
+            const light = new THREE.DirectionalLight( 0xffffff, 0.5 )
+            light.position.set( 0, 1, 0 ).normalize()
+            scene.add(light)
+
+            for (let a=0; a<6; a++) {
+                loader.load("arrow.json", model => {
+
+                    model.position.x = positions[a].x * 2 * Math.PI
+                    model.position.y = positions[a].y * 2 * Math.PI
+                    model.position.z = positions[a].z * 2 * Math.PI
+
+                    model.rotation.x = rotations[a].x * 2 * Math.PI
+                    model.rotation.y = rotations[a].y * 2 * Math.PI
+                    model.rotation.z = rotations[a].z * 2 * Math.PI
+
+                    model.children.forEach(c => {
+                        if (a==3) {
+                            c.material.emissive.setHex(CYAN)
+                            clickedObject = model
+                        } else {
+                            c.material.emissive.setHex(WHITE)
+                        }
+                    })
+
+                    arrowModels.push(model)
+                    model.data = {arrowIndex: a}
+                    scene.add(model)
+                })
+            }
+
+            const render = () => {
+                requestAnimationFrame(render)
+                camera.lookAt(scene.position)
+
+                // const vector = new THREE.Vector3(mouse.x, mouse.y, 1)
+                camera.updateMatrixWorld()
+                raycaster.setFromCamera( mouse, camera )
+
+                const intersects = raycaster.intersectObjects(scene.children, true)
+
+                if (intersects.length) {
+
+                    hoveredObject = intersects[0].object.name.toLowerCase().startsWith("box") ? intersects[0].object.parent : intersects[0].object
+
+                    document.body.style.cursor = "pointer"
+
+                    if (hoveredObject == clickedObject) {
+                        // do nothing
+                    } else {
+
+                        if (mouseIsDown) {
+                            if (clickedObject) {
+                                // Clear old one
+                                clickedObject.children.forEach(c => c.material.emissive.setHex(WHITE))
+                            }
+
+                            // Set new one to cyan
+                            hoveredObject.children.forEach(c => c.material.emissive.setHex(CYAN))
+                            clickedObject = hoveredObject
+                            console.log("clicked", arrowNames[clickedObject.data.arrowIndex])
+                            if (ws){
+                                ws.send(
+                                    JSON.stringify(
+                                        {   direction: arrowNames[clickedObject.data.arrowIndex],
+                                            userId: "1234",
+                                            username: "rob",
+                                            type: "text",
+                                            room: roomNameValue,
+                                            type: "gravity"}))
+
+                            } else {
+                                game.shiftGravity(arrowNames[clickedObject.data.arrowIndex])
+                            }
+                        } else {
+                            // Hovering over non clicked item without the mouse down
+                            arrowModels.forEach(arrow => {
+                                if (arrow != clickedObject) {
+                                    arrow.children.forEach(c => c.material.emissive.setHex(WHITE))
+                                }
+                            })
+
+                            if (hoveredObject != clickedObject) {
+                                hoveredObject.children.forEach(c => c.material.emissive.setHex(YELLOW))
+                            }
+                        }
+                    }
+
+                } else {
+                    document.body.style.cursor = "default"
+                    if (arrowModels) {
+                        arrowModels.forEach(arrow => {
+
+                            if (arrow != clickedObject) {
+                                arrow.children.forEach(c => c.material.emissive.setHex(WHITE))
+                            }
+                        })
+                    }
+                    hoveredObject = null
+                }
+                renderer.render(scene, camera)
+            }
+
+            render()
+
+            const setRotation = rotation => {
+                camera.position.x = Math.sin(rotation*Math.PI/180) * 3
+                camera.position.z = Math.cos(rotation*Math.PI/180) * 3
+                this.game.board.rotation = rotation
+                this.game.board.rotate()
+            }
+            setRotation(rotation=-45)
+
+            // Maybe do it on canvas, instead of document?
+            renderer.domElement.addEventListener("mousemove", event => {
+                const sizeY = event.target.height
+                const sizeX = event.target.width
+                mouse.x = event.offsetX / sizeX * 2 - 1
+                mouse.y = -event.offsetY / sizeY * 2 + 1
+
+                // const size = event.target.height
+                // mouse.x = (event.offsetX / size) * 2 - 1
+                // mouse.y = - (event.offsetY / size) * 2 + 1
+            }, false)
+            document.addEventListener("mousedown", event => {
+                if (event.target == arrowsCanvas) {
+                    mouseIsDown = true
+                } else if (event.target == rendererDomElement) {
+                    game.board.mouseIsDown = true
+                }
+            })
+            document.addEventListener("mouseup", () => {
+                mouseIsDown = false
+                game.board.mouseIsDown = false
+            })
+            document.addEventListener("click", () => {
+                mouseIsDown = false
+                game.board.mouseIsDown = false
+            })
+
+            window.addEventListener("wheel", ({deltaY}) => {
+                isRotating = true
+                game.board.rotationValue += (deltaY > 0 ? 1 : -1) * 5
+                game.board.rotate()
+                isRotating = false
+
+                rotation = (rotation + (deltaY > 0 ? 1 : -1) * 5) % 360
+                setRotation(rotation)
+            })
+
+
+            window.addEventListener("arrowClicked", ({detail}) => {
+
+            })
+
+            window.addEventListener("keydown", e => {
+                if (e.code == "Space") {
+                    game.board.toggleExploded()
+                }
+            })
+        }
+        initArrows()
+
+
+        window.trainAI = () => {
+            game.gravityEnabled = false
+            game.trainAI({epochs: 600, epsilon: 0.5})
+        }
+
+    })
+
+    function connectWebSockets(roomName) {
+        ws =  new WebSocket("ws://vrscrible.localhost:8000/" + roomName)
+
+        ws.addEventListener("message", (message) => {
+            const data = JSON.parse(message.data)
+            console.log(data)
+
+            if (data.type === "gravity") {
+                game.shiftGravity(data.direction)
+
+            } else if (data.type === "move") {
+
+
+                let player = data.playerIndex;
+                let b = data.b;
+                let r = data.r;
+                let c = data.c;
+                console.log(player, b, r, c)
+                game.makeMove(player, b, r, c)
+            }
+        })
+
+        ws.addEventListener("open", () => {
+            console.log("connect ws")
+            ws.send(JSON.stringify({userId: "1234", username: "rob", type: "text", room: roomNameValue }))
+        })
+    }
+
+    </script>
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <h1 id="title" class="text-center my-5"><a href="/">T^3</a></h1>
+
+                <div class="row">
+
+                    <div class="col-sm-3">
+
+                        <div class="side-panel">
+
+                            <h2 class="panel-title">
+                                Room: {{RoomName}}
+                            </h2>
+
+                            <h3 class="panel-title">
+                                Players In Room
+                            </h3>
+
+                            <ul class="panel-player-list list-unstyled">
+                                <li class="player">
+                                    <ul class="list-unstlyed">
+                                        <li class="player-colour" data-colour="red">red</li>
+                                        <!-- /.player-colour -->
+                                        <li class="player-name">Ben Campbell:</li>
+                                        <!-- /.player-name -->
+                                        <li class="player-score">2</li>
+                                        <!-- /.player-score -->
+                                    </ul>
+                                </li>
+                                <!-- /.player -->
+                                <li class="player">
+                                    <ul class="list-unstlyed">
+                                        <li class="player-colour" data-colour="blue">blue</li>
+                                        <!-- /.player-colour -->
+                                        <li class="player-name">Dan Ruta:</li>
+                                        <!-- /.player-name -->
+                                        <li class="player-score">2</li>
+                                        <!-- /.player-score -->
+                                    </ul>
+                                </li>
+                                <!-- /.player -->
+                                <li class="player">
+                                    <ul class="list-unstlyed">
+                                        <li class="player-colour" data-colour="green">green</li>
+                                        <!-- /.player-colour -->
+                                        <li class="player-name">Best Rob:</li>
+                                        <!-- /.player-name -->
+                                        <li class="player-score">2</li>
+                                        <!-- /.player-score -->
+                                    </ul>
+                                </li>
+                                <!-- /.player -->
+                            </ul>
+                            <!-- /.panel-player-list -->
+                            <div class="d-flex flex-column">
+                                <a href="javascript:void(0)" id="resetButton" class="panel-button btn btn-primary">Reset Board</a>
+
+                                <a href="/" class="panel-button btn btn-primary">Leave Room</a>
+                            </div>
+                        </div>
+
+                        <div class="arrow-container">
+
+                            <!--arrows go here-->
+                            <div id="arrowsContainer"></div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-sm-9">
+
+                        <div class="top-panel">
+
+                            <div class="side-panel top-panel p-4">
+
+                                <div class="d-flex justify-content-between">
+                                    <div class="panel-content mb-0">
+                                        Current Turn: Best Rob
+                                    </div>
+                                    <div class="panel-content mb-0">
+                                        Next Turn: Dan Ruta
+                                    </div>
+                                    <!-- /.panel-content -->
+                                </div>
+                                <!-- /.d-flex justify-content between -->
+
+                            </div>
+
+                        </div>
+
+                        <div id="content" class="game-container">
+                            <!--game goes here-->
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- /.panel -->
+                <footer class="text-center mb-5"><a href="/">Logout</a> | <a href="/privacy.html">Privacy Policy</a></footer>
+            </div>
+            <!-- /.col-12 -->
+        </div>
+        <!-- /.row -->
+    </div>
+    <!-- /.container -->
+</body>
+</html>

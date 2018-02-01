@@ -58,7 +58,7 @@ class GameLogic {// eslint-disable-line
             }
         }
 
-        playerNum.style.color = this.board.playerColours[this.playerIndex]
+        // playerNum.style.color = this.board.playerColours[this.playerIndex]
         this.players[this.playerIndex].pickMove(this.gameState)
     }
 
@@ -86,10 +86,10 @@ class GameLogic {// eslint-disable-line
 
         if (this.board) {
             this.board.resetBoard()
-            playerNum.style.color = this.board.playerColours[this.playerIndex]
+            // playerNum.style.color = this.board.playerColours[this.playerIndex]
         }
 
-        winsDisplay.style.display = "none"
+        // winsDisplay.style.display = "none"
         this.gameState = gameState
 
         // Clear the AI players' lastState
@@ -133,7 +133,7 @@ class GameLogic {// eslint-disable-line
         if (this.isWinningMove(b, r, c, p)) {
             this.players[p].reward(1, this.gameState)
             this.players.forEach((player, pi) => pi!=p && player.reward(-1, this.gameState))
-            winsDisplay.style.display = "inline-block"
+            // winsDisplay.style.display = "inline-block"
             return
         }
 
@@ -151,8 +151,8 @@ class GameLogic {// eslint-disable-line
         this.playerIndex = ++this.playerIndex % this.players.length
 
         // TODO, do this outside of this class?
-        playerNum.style.color = this.board.playerColours[this.playerIndex]
-        winsDisplay.style.display = "none"
+        // playerNum.style.color = this.board.playerColours[this.playerIndex]
+        // winsDisplay.style.display = "none"
 
         this.players[this.playerIndex].pickMove(this.gameState)
     }
@@ -426,14 +426,17 @@ class GameLogic {// eslint-disable-line
         }
 
 
-        if (match) {
-            playerNum.style.color = this.board.playerColours[player]
-            winsDisplay.style.display = "inline-block"
-        } else {
-            this.playerIndex = ++this.playerIndex % this.players.length
-            winsDisplay.style.display = "none"
-            playerNum.style.color = this.board.playerColours[this.playerIndex]
-        }
+        return player
+
+
+        // if (match) {
+        //     playerNum.style.color = this.board.playerColours[player]
+        //     winsDisplay.style.display = "inline-block"
+        // } else {
+        //     this.playerIndex = ++this.playerIndex % this.players.length
+        //     winsDisplay.style.display = "none"
+        //     playerNum.style.color = this.board.playerColours[this.playerIndex]
+        // }
     }
 
 }

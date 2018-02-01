@@ -63,14 +63,15 @@ class GameBoard {// eslint-disable-line
         this.previewSphere = new THREE.Mesh(previewSphereGeometry, previewSphereMaterial)
         this.scene.add(this.previewSphere)
 
-        console.log("HERE", this)
         this.initBoards()
         this.renderLoop()
         this.rotate()
 
         this.boardElement.addEventListener("mousemove", event => {
-            this.mouse.x = event.clientX / window.innerWidth * 2 - 1
-            this.mouse.y = -event.clientY / window.innerHeight * 2 + 1
+            const sizeY = event.target.height
+            const sizeX = event.target.width
+            this.mouse.x = event.offsetX / sizeX * 2 - 1
+            this.mouse.y = -event.offsetY / sizeY * 2 + 1
         }, false)
     }
 
