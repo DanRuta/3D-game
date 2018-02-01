@@ -186,6 +186,10 @@ class GameBoard {// eslint-disable-line
         pos.r = cube.data.r
         pos.c = cube.data.c
 
+        if (!this.game.gravityEnabled) {
+            return pos
+        }
+
         switch (this.game.gravity.axis) {
             // up/down
             case 0:
