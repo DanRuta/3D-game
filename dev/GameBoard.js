@@ -128,6 +128,13 @@ class GameBoard {// eslint-disable-line
             z: sphere.position.z
         }
 
+        // Set the sphere position to the exploded position
+        if (this.explodedMult!=1) {
+            sphere.position.x += sphere.origPos.x * this.explodedMult - sphere.position.x
+            sphere.position.y += sphere.origPos.y * this.explodedMult - sphere.position.y
+            sphere.position.z += sphere.origPos.z * this.explodedMult - sphere.position.z
+        }
+
         this.spheres[b][r][c] = sphere
         this.scene.add(sphere)
     }
@@ -169,9 +176,9 @@ class GameBoard {// eslint-disable-line
 
         const incr = this.game.gravity.modifier
         const pos = {
-            x : cube.position.x,
-            y : cube.position.y,
-            z : cube.position.z
+            x : cube.origPos.x,
+            y : cube.origPos.y,
+            z : cube.origPos.z
         }
 
         pos.b = cube.data.b
@@ -210,6 +217,7 @@ class GameBoard {// eslint-disable-line
 
                 pos.x = (pos.c - this.SPREAD) * this.BOX_WIDTH * this.SPACING
                 break
+            // forward/backward
             case 2:
                 // Row full
                 if (this.spheres[cube.data.b][incr==-1 ? this.span-1 : 0][cube.data.c]) {
@@ -224,6 +232,12 @@ class GameBoard {// eslint-disable-line
 
                 pos.z = (pos.r - this.SPREAD) * this.BOX_WIDTH * this.SPACING
                 break
+        }
+
+        if (this.explodedMult!=1) {
+            pos.x *= this.explodedMult
+            pos.y *= this.explodedMult
+            pos.z *= this.explodedMult
         }
 
         // Don't render it if there's already a sphere at that location
@@ -258,9 +272,19 @@ class GameBoard {// eslint-disable-line
                     for (let c=0; c<this.span; c++) {
 
                         if (b!=this.SPREAD && r!=this.SPREAD && c!=this.SPREAD
-                            && Math.abs(this.boxes[b][r][c].position.x - this.boxes[b][r][c].origPos.x * this.explodedMult) < 0.05) {
+                            && Math.abs(this.boxes[b][r][c].position.x - this.boxes[b][r][c].origPos.x * this.explodedMult) < 0.005) {
 
                             this.isLerpingBoxes = false
+                            this.boxes[b][r][c].position.x = this.boxes[b][r][c].origPos.x * this.explodedMult
+                            this.boxes[b][r][c].position.y = this.boxes[b][r][c].origPos.y * this.explodedMult
+                            this.boxes[b][r][c].position.z = this.boxes[b][r][c].origPos.z * this.explodedMult
+
+                            if (this.spheres[b][r][c]) {
+                                this.spheres[b][r][c].position.x += this.spheres[b][r][c].origPos.x * this.explodedMult - this.spheres[b][r][c].position.x
+                                this.spheres[b][r][c].position.y += this.spheres[b][r][c].origPos.y * this.explodedMult - this.spheres[b][r][c].position.y
+                                this.spheres[b][r][c].position.z += this.spheres[b][r][c].origPos.z * this.explodedMult - this.spheres[b][r][c].position.z
+                            }
+
                         } else {
                             this.boxes[b][r][c].position.x += (this.boxes[b][r][c].origPos.x * this.explodedMult - this.boxes[b][r][c].position.x) / 10
                             this.boxes[b][r][c].position.y += (this.boxes[b][r][c].origPos.y * this.explodedMult - this.boxes[b][r][c].position.y) / 10
@@ -291,10 +315,11 @@ class GameBoard {// eslint-disable-line
                         const sphere = this.spheres[b][r][c]
                         const {axis} = sphere.newPos
 
-                        if (Math.abs(sphere.position[axis] - sphere.newPos[axis]) > 0.025) {
-                            sphere.position[axis] += (sphere.newPos[axis] - sphere.position[axis]) / 10
+                        if (Math.abs(sphere.position[axis] - sphere.newPos[axis] * this.explodedMult) > 0.01) {
+                            sphere.position[axis] += (sphere.newPos[axis] * this.explodedMult - sphere.position[axis]) / 10
                         } else {
                             sphere.isLerping = false
+                            sphere.position[axis] = sphere.newPos[axis] * this.explodedMult
                             sphere.origPos[axis] = sphere.newPos[axis]
                         }
                     }
