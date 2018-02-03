@@ -297,18 +297,65 @@ class GamePlayer {// eslint-disable-line
         return gameState
     }
 
-
-
-    rotateB (gameState, deg) {
-
+    // rotate around B axis (left forward/right backward)
+    rotateB (gameState, deg=0) {
+        if (deg>=90) {
+            for (let b=0; b<this.game.span; b++) {
+                for (let r=0; r<Math.floor(this.game.span/2); r++) {
+                    for (let c=r; c<this.game.span-1-r; c++) {
+                        const first = gameState[b][r][c]
+                        gameState[b][r][c] = gameState[b][this.game.span-1-c][r]
+                        gameState[b][this.game.span-1-c][r] = gameState[b][this.game.span-1-r][this.game.span-1-c]
+                        gameState[b][this.game.span-1-r][this.game.span-1-c] = gameState[b][c][this.game.span-1-r]
+                        gameState[b][c][this.game.span-1-r] = first
+                    }
+                }
+            }
+            if (deg-90>0) {
+                return this.rotateB(gameState, deg-90)
+            }
+        }
+        return gameState
     }
 
+    // rotate around R axis (forward/backward)
     rotateR (gameState, deg) {
-
+        if (deg>=90) {
+            for (let b=this.game.span-1; b>0; b--) {
+                for (let r=this.game.span-1-b; r<b; r++) {
+                    const first = gameState[b][r]
+                    gameState[b][r] = gameState[this.game.span-1-r][b]
+                    gameState[this.game.span-1-r][b] = gameState[this.game.span-1-b][this.game.span-1-r]
+                    gameState[this.game.span-1-b][this.game.span-1-r] = gameState[r][this.game.span-1-b]
+                    gameState[r][this.game.span-1-b] = first
+                }
+            }
+            if (deg-90>0) {
+                return this.rotateR(gameState, deg-90)
+            }
+        }
+        return gameState
     }
 
+    // rotate around the C axis (left up/right down)
     rotateC (gameState, deg) {
-
+        if (deg>=90) {
+            for (let r=0; r<this.game.span; r++) {
+                for (let b=this.game.span-1; b>0; b--) {
+                    for (let c=this.game.span-1-b; c<b; c++) {
+                        const first = gameState[b][r][c]
+                        gameState[b][r][c] = gameState[this.game.span-1-c][r][b]
+                        gameState[this.game.span-1-c][r][b] = gameState[this.game.span-1-b][r][this.game.span-1-c]
+                        gameState[this.game.span-1-b][r][this.game.span-1-c] = gameState[c][r][this.game.span-1-b]
+                        gameState[c][r][this.game.span-1-b] = first
+                    }
+                }
+            }
+            if (deg-90>0) {
+                return this.rotateC(gameState, deg-90)
+            }
+        }
+        return gameState
     }
 
 }
