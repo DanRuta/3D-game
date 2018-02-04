@@ -20,7 +20,10 @@ let usersData = []
 // GET
 // ===
 const index = (request, response) => {
-    sendData({request, response, code: 200, data: fs.readFileSync("game.html", "utf8"), contentType: "text/html"})
+    sendData({request, response, code: 200, data: fs.readFileSync("index.html", "utf8"), contentType: "text/html"})
+}
+const game = (request, response) => {
+    sendData({request, response, code: 200, data: fs.readFileSync("game2d.html", "utf8"), contentType: "text/html"})
 }
 
 
@@ -317,6 +320,7 @@ exports.initProject = ({sendDataCallback, error}) => {
     return {
         get: {
             [/$/] : index,
+            [/game/] : game,
         },
         post: {
             [/getAIMove/] : getAIMove,

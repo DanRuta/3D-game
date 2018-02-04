@@ -85,14 +85,16 @@
                 // isMultiplayer: false
             })
             content.appendChild(game.board.boardElement)
+            
+            let roomNameValue = getURLParameter("roomName")
+            
+            if (roomNameValue !== "") {
+               connectWebSockets()
+            }
         })
         resetButton.click()
 
-        // roomNameValue = roomName.value.trim()
 
-        // if (roomNameValue !== "") {
-        //     connectWebSockets()
-        // }
 
         // Arrows stuff
         const initArrows = () => {
@@ -328,8 +330,13 @@
 
         ws.addEventListener("open", () => {
             console.log("connect ws")
-            ws.send(JSON.stringify({userId: "1234", username: "rob", type: "text", room: roomNameValue }))
+            ws.send(JSON.stringify({userId: "1234", username: "rob", type: "setUp", room: roomNameValue }))
         })
+    }
+
+    function getURLParameter(name) {
+        //https://stackoverflow.com/questions/11582512/how-to-get-url-parameters-with-javascript
+        return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
     }
 
     </script>
