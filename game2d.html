@@ -90,6 +90,7 @@
             
             if (roomNameValue !== "") {
                connectWebSockets(roomNameValue)
+                roomNameTitle.innerText = roomNameValue
             }
         })
         resetButton.click()
@@ -388,7 +389,7 @@
                         <div class="side-panel">
 
                             <h2 class="panel-title">
-                                Room: {{RoomName}}
+                                Room: <label id="roomNameTitle"></label>
                             </h2>
 
                             <h3 class="panel-title">
