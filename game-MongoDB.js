@@ -118,14 +118,14 @@ module.exports.getRoom = async(id) => {
   const room = db.collection("room")
   let result = await room.find({room: id}).toArray()
 
-  return result
+  return result[0]
 };
 
 module.exports.createRoom = async(id) => {
   const db = await connectDB()
 
   const room = db.collection("room")
-  let result = await room.insert({room: id, data: ""})
+  let result = await room.insert({room: id, gameState: ""})
 
   return result
 };
@@ -134,7 +134,7 @@ module.exports.updateRoom = async(id, data) => {
   const db = await connectDB()
 
   const room = db.collection("room")
-  let result = await room.insert({room: id, data: data})
+  let result = await room.insert({room: id, gameState: data})
 
   return result
 };

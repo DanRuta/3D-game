@@ -86,10 +86,10 @@
             })
             content.appendChild(game.board.boardElement)
             
-            let roomNameValue = getURLParameter("roomName")
+            roomNameValue = getURLParameter("roomName")
             
             if (roomNameValue !== "") {
-               connectWebSockets()
+               connectWebSockets(roomNameValue)
             }
         })
         resetButton.click()
@@ -330,7 +330,8 @@
 
         ws.addEventListener("open", () => {
             console.log("connect ws")
-            ws.send(JSON.stringify({userId: "1234", username: "rob", type: "setUp", room: roomNameValue }))
+            console.log(roomName)
+            ws.send(JSON.stringify({userId: "1234", username: "rob", type: "setUp", room: roomName }))
         })
     }
 
@@ -338,7 +339,38 @@
         //https://stackoverflow.com/questions/11582512/how-to-get-url-parameters-with-javascript
         return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
     }
-
+    
+    function sendMove(playerIndex, b, r, c) {
+        if (ws){
+            ws.send(
+                JSON.stringify(
+                    { playerIndex: playerIndex, 
+                     b: b, 
+                     r: r,   
+                     c: c,
+                     userId: "1234", 
+                     username: "rob",
+                     type: "text", 
+                     room: roomNameValue,
+                     type: "move"}))
+        }
+    }
+        
+    function saveGameState(roomName, gameState) {
+        fetch("./saveGameState", {
+            method: "post",
+            body: JSON.stringify({roomName: roomName, gameState: gameState})
+        })
+    }
+    
+    function getGameState(roomName) {
+         let data = fetch("./getGameState", {
+            method: "get",
+            body: JSON.stringify({roomName: roomName})
+         })
+        
+        //game.setState(gmaeState)
+    }
     </script>
 </head>
 

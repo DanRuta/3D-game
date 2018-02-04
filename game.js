@@ -5,6 +5,7 @@ let sendData, returnError, websocketClients=[], keys
 const fs = require("fs")
 const pug = require("pug")
 const fetch = require("node-fetch")
+const url = require("url")
 const db = require("./game-MongoDB")
 
 try {
@@ -22,8 +23,27 @@ let usersData = []
 const index = (request, response) => {
     sendData({request, response, code: 200, data: fs.readFileSync("index.html", "utf8"), contentType: "text/html"})
 }
-const game = (request, response) => {
+
+const game = async(request, response) => {
+    const params = url.parse(request.url, true)
+    const roomName = params.query.roomName ? params.query.roomName : false
+    console.log(roomName)
+    
+    if(roomName){
+        const room = await db.getRoom(roomName)
+
+        if(!room){
+            const result = await db.createRoom(roomName)
+        }
+    }
     sendData({request, response, code: 200, data: fs.readFileSync("game2d.html", "utf8"), contentType: "text/html"})
+}
+
+const getGameState = (request, response, {roomName}) => {
+    const data = db.getRoom(roomName)
+    const gameState = data.gameState
+    
+    sendData({request, response, code: 200, data: gameState, contentType: "application/json"})
 }
 
 
@@ -88,6 +108,12 @@ const createRoom = async(request, response, {roomName}) => {
     }
 
     sendData({request, response, code: 200, data: JSON.stringify({roomName: responseData}), contentType: "text/plain"})
+}
+
+
+const saveGameState = (request, response, {roomName, gameState}) => {
+    
+    db.updateRoom(roomName, gameState)
 }
 
 
@@ -200,8 +226,6 @@ const changeUsername = (request, response, {newName, token, authenticator}) => {
         sendData({request, response, code: 200, data: JSON.stringify({newName})})
     })
 }
-
-
 
 const handleWebSocket = (connection, clients) => {
 
@@ -321,6 +345,7 @@ exports.initProject = ({sendDataCallback, error}) => {
         get: {
             [/$/] : index,
             [/game/] : game,
+            [/getGameState/] : getGameState,
         },
         post: {
             [/getAIMove/] : getAIMove,
@@ -330,7 +355,9 @@ exports.initProject = ({sendDataCallback, error}) => {
             [/createRoom/] : createRoom,
 
             [/tokenSignin/] : tokenSignin,
-            [/changeUsername/] : changeUsername
+            [/changeUsername/] : changeUsername,
+            
+            [/saveGameState/] : saveGameState
         },
         ws: handleWebSocket
     }
