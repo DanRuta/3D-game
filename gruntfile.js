@@ -9,7 +9,7 @@ module.exports = function(grunt){
                 sourceMap: true
             },
             files: {
-                src: ["dev/*.js"],
+                src: ["dev/GameBoard.js", "dev/GamePlayer.js", "dev/GameLogic.js"],
                 dest: "dist/game.concat.js"
             }
         },
@@ -23,7 +23,8 @@ module.exports = function(grunt){
                     mangle: false,
                 },
                 files: {
-                    "dist/game.min.js" : ["dist/game.concat.js"]
+                    "dist/game.min.js" : ["dist/game.concat.js"],
+                    "dist/script2D.min.js" : ["dev/script2D.js"],
                 }
             }
         },

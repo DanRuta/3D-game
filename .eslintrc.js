@@ -17,7 +17,7 @@ module.exports = {
             }
         ],
         "no-unused-vars": [
-            "error"
+            1
         ],
         "quotes": [
             "error",
