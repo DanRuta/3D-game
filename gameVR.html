@@ -3,10 +3,33 @@
 <head>
     <title>T^3 | VR</title>
     <meta charset="utf-8">
-    <script src="dist/scriptVR.min.js"></script>
+    <script src="lib/NoSleep.min.js"></script>
     <script src="lib/three.min.js"></script>
+    <script src="lib/VREffect.js"></script>
+    <script src="lib/StereoEffect.js"></script>
+    <script src="lib/OrbitControls.js"></script>
+    <script src="dist/scriptVR.min.js"></script>
 </head>
+<style>
+    body {
+        overflow: hidden;
+    }
+    #enterVRButton {
+        position: absolute;
+        height: 60px;
+        width: 100px;
+        cursor: pointer;
+        background-image: url(./images/cardboard64.png);
+        background-size: cover;
+        background-repeat: no-repeat;
+        transition: transform 300ms ease;
+        filter: drop-shadow(0 0 2px rgba(0, 0, 0, 1));
+    }
+    #enterVRButton.small {
+        transform: scale(0.7);
+    }
+</style>
 <body>
-
+    <div id="enterVRButton"></div>
 </body>
 </html>

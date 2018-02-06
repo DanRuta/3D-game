@@ -22,7 +22,7 @@ const index = (request, response) => {
     sendData({request, response, code: 200, data: fs.readFileSync("index.html", "utf8"), contentType: "text/html"})
 }
 
-const game = async(request, response) => {
+const sendGame2D = async(request, response) => {
     const params = url.parse(request.url, true)
     const roomName = params.query.roomName ? params.query.roomName : false
     console.log(roomName)
@@ -249,7 +249,7 @@ exports.initProject = ({sendDataCallback}) => {
     return {
         get: {
             [/$/] : index,
-            [/game/] : game,
+            [/game$/] : sendGame2D,
             [/getGameState/] : getGameState
         },
         post: {

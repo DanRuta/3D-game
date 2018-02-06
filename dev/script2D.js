@@ -151,14 +151,14 @@ window.addEventListener("load", () => {
                         clickedObject = hoveredObject
                         console.log("clicked", arrowNames[clickedObject.data.arrowIndex])
                         if (ws){
-                            ws.send(
-                                JSON.stringify(
-                                    {   direction: arrowNames[clickedObject.data.arrowIndex],
-                                        userId: "1234",
-                                        username: "rob",
-                                        type: "text",
-                                        room: roomNameValue,
-                                        type: "gravity"}))
+                            ws.send(JSON.stringify({
+                                direction: arrowNames[clickedObject.data.arrowIndex],
+                                userId: "1234",
+                                username: "rob",
+                                type: "text",
+                                room: roomNameValue,
+                                type: "gravity"
+                            }))
 
                         } else {
                             game.shiftGravity(arrowNames[clickedObject.data.arrowIndex])
@@ -202,17 +202,13 @@ window.addEventListener("load", () => {
         }
         setRotation(rotation=-45)
 
-        // Maybe do it on canvas, instead of document?
         renderer.domElement.addEventListener("mousemove", event => {
             const sizeY = event.target.height
             const sizeX = event.target.width
             mouse.x = event.offsetX / sizeX * 2 - 1
             mouse.y = -event.offsetY / sizeY * 2 + 1
-
-            // const size = event.target.height
-            // mouse.x = (event.offsetX / size) * 2 - 1
-            // mouse.y = - (event.offsetY / size) * 2 + 1
         }, false)
+
         document.addEventListener("mousedown", event => {
             if (event.target == arrowsCanvas) {
                 mouseIsDown = true
@@ -220,10 +216,12 @@ window.addEventListener("load", () => {
                 game.board.mouseIsDown = true
             }
         })
+
         document.addEventListener("mouseup", () => {
             mouseIsDown = false
             game.board.mouseIsDown = false
         })
+
         document.addEventListener("click", () => {
             mouseIsDown = false
             game.board.mouseIsDown = false
