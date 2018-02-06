@@ -113,6 +113,13 @@ window.addEventListener("load", () => {
         context.fillRect(x, y, 1, 1)
     }
 
+    const drawBounds = (x, y) => {
+        context.beginPath()
+        context.strokeStyle = "rgba(0,0,255,1)"
+        context.rect(x, y, 50, 50)
+        context.stroke()
+    }
+
 
     let lastX = 0
     let lastY = 0
@@ -141,6 +148,7 @@ window.addEventListener("load", () => {
             startC = lastX - 25
             endR = lastY + 25
             endC = lastX + 25
+            drawBounds(startC, startR)
         }
 
         // For every 4th row
@@ -166,9 +174,22 @@ window.addEventListener("load", () => {
             avgX /= counter
             avgY /= counter
 
+            // if (lastX || lastY) {
+            //     avgX += (lastX-avgX)/10
+            //     avgY += (lastY-avgY)/10
+
+            //     if (Math.abs(avgX-lastX)<1e-3 && Math.abs(avgY-lastY)<1e-3) {
+            //         lastX = avgX
+            //         lastY = avgY
+            //     }
+            // } else {
+                lastX = avgX
+                lastY = avgY
+            // }
+
             plotDot(avgX, avgY)
-            lastX = avgX
-            lastY = avgY
+            // lastX = avgX
+            // lastY = avgY
         } else {
             lastX = 0
             lastY = 0
