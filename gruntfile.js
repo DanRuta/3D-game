@@ -25,6 +25,7 @@ module.exports = function(grunt){
                 files: {
                     "dist/game.min.js" : ["dist/game.concat.js"],
                     "dist/script2D.min.js" : ["dev/script2D.js"],
+                    "dist/scriptVR.min.js" : ["dev/scriptVR.js"]
                 }
             }
         },

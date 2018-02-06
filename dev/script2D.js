@@ -95,7 +95,7 @@ window.addEventListener("load", () => {
         scene.add(light)
 
         for (let a=0; a<6; a++) {
-            loader.load("arrow.json", model => {
+            loader.load("lib/arrow.json", model => {
 
                 model.position.x = positions[a].x * 2 * Math.PI
                 model.position.y = positions[a].y * 2 * Math.PI

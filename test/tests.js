@@ -2,7 +2,7 @@
 
 const chai = require("chai")
 const expect = chai.expect
-const {GamePlayer} = require("./trainer/GamePlayer.js")
+const {GamePlayer} = require("../trainer/GamePlayer.js")
 
 describe("Cube symmetry", () => {
 

@@ -6,7 +6,7 @@ const fs = require("fs")
 const pug = require("pug")
 const fetch = require("node-fetch")
 const url = require("url")
-const db = require("./game-MongoDB")
+const db = require("./mongo")
 
 try {
     keys = JSON.parse(fs.readFileSync("./keys.json"))
@@ -28,7 +28,7 @@ const game = async(request, response) => {
     const params = url.parse(request.url, true)
     const roomName = params.query.roomName ? params.query.roomName : false
     console.log(roomName)
-    
+
     if(roomName){
         const room = await db.getRoom(roomName)
 
@@ -42,7 +42,7 @@ const game = async(request, response) => {
 const getGameState = (request, response, {roomName}) => {
     const data = db.getRoom(roomName)
     const gameState = data.gameState
-    
+
     sendData({request, response, code: 200, data: gameState, contentType: "application/json"})
 }
 
@@ -96,10 +96,6 @@ const createRoom = async(request, response, {roomName}) => {
 
     let responseData
 
-//    if (!rooms.includes(roomName)) {
-//        rooms.push(roomName)
-//        responseData = roomName
-//    }
     let roomExists = await db.getRoom(roomName);
 
     if(roomExists === []) {
@@ -112,7 +108,7 @@ const createRoom = async(request, response, {roomName}) => {
 
 
 const saveGameState = (request, response, {roomName, gameState}) => {
-    
+
     db.updateRoom(roomName, gameState)
 }
 
@@ -128,62 +124,62 @@ const tokenSignin = async (request, response, {authenticator, token, roomName}) 
         let userFound = false
         let userId
 
-        // Check if the user exists, by looping through usersData object
-        for (let userIndex in usersData) {
+        // // Check if the user exists, by looping through usersData object
+        // for (let userIndex in usersData) {
 
-            const currentUser = usersData[userIndex]
+        //     const currentUser = usersData[userIndex]
 
-            // Update existing user data
-            // if (currentUser.authUserID[authenticator]==id) {
-            if (currentUser.authUserID==id) {
+        //     // Update existing user data
+        //     // if (currentUser.authUserID[authenticator]==id) {
+        //     if (currentUser.authUserID==id) {
 
-                userFound = true
-                userId = userIndex
-                username = currentUser.username
+        //         userFound = true
+        //         userId = userIndex
+        //         username = currentUser.username
 
-                if (currentUser.email != email) {
-                    currentUser.email = email
-                }
+        //         if (currentUser.email != email) {
+        //             currentUser.email = email
+        //         }
 
-                usersData[userId].timesLoggedIn++
+        //         usersData[userId].timesLoggedIn++
 
-                break
-            }
-        }
+        //         break
+        //     }
+        // }
 
-        if (!userFound) {
-            console.log("Creating new user")
+        // if (!userFound) {
+        //     console.log("Creating new user")
 
-            // Create new user with incremental ID, and name defaulted to name from authenticator
-            userId = Object.keys(usersData).length
+        //     // Create new user with incremental ID, and name defaulted to name from authenticator
+        //     userId = Object.keys(usersData).length
 
-            // Check if the username is taken
-            let usernameCount = 0
+        //     // Check if the username is taken
+        //     let usernameCount = 0
 
-            for(let userId in usersData) {
-                if (usersData[userId].username==name) {
-                    usernameCount++
-                }
-            }
+        //     for(let userId in usersData) {
+        //         if (usersData[userId].username==name) {
+        //             usernameCount++
+        //         }
+        //     }
 
-            const newUserData = {
-                username : usernameCount>0 ? name+usernameCount : name,
-                authUserID: id,
-                email: undefined,
-                timesLoggedIn: 1,
-                screenshotsTaken: 0
-            }
+        //     const newUserData = {
+        //         username : usernameCount>0 ? name+usernameCount : name,
+        //         authUserID: id,
+        //         email: undefined,
+        //         timesLoggedIn: 1,
+        //         screenshotsTaken: 0
+        //     }
 
 
-            newUserData.email = email
+        //     newUserData.email = email
 
-            username = newUserData.username
-            newUser = true
+        //     username = newUserData.username
+        //     newUser = true
 
-            // Add new user to the user data
-            usersData[userId] = newUserData
-        }
-        fs.writeFile("./usersData.json", JSON.stringify(usersData, null, 4),()=>{})
+        //     // Add new user to the user data
+        //     usersData[userId] = newUserData
+        // }
+        // fs.writeFile("./usersData.json", JSON.stringify(usersData, null, 4),()=>{})
 
         const finishAndSend = () => sendData({request, response, code: 200, data: JSON.stringify({username, userId, newUser, roomExists})})
 
@@ -338,7 +334,7 @@ exports.initProject = ({sendDataCallback, error}) => {
     sendData = sendDataCallback
     returnError = error
 
-    usersData = JSON.parse(fs.readFileSync("./usersData.json"))
+    // usersData = JSON.parse(fs.readFileSync("./usersData.json"))
     rooms = []
 
     return {
@@ -356,7 +352,7 @@ exports.initProject = ({sendDataCallback, error}) => {
 
             [/tokenSignin/] : tokenSignin,
             [/changeUsername/] : changeUsername,
-            
+
             [/saveGameState/] : saveGameState
         },
         ws: handleWebSocket
