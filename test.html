@@ -116,7 +116,7 @@ window.addEventListener("load", () => {
     const drawBounds = (x, y) => {
         context.beginPath()
         context.strokeStyle = "rgba(0,0,255,1)"
-        context.rect(x, y, 50, 50)
+        context.rect(x, y, bounds*2, bounds*2)
         context.stroke()
     }
 
@@ -124,76 +124,75 @@ window.addEventListener("load", () => {
     let lastX = 0
     let lastY = 0
 
+    let newX = 0
+    let newY = 0
+
+    let bounds = 100
+    let foundWithinBounds = false
+
+    let frameCounter = -1
+
     const readCircle = () => {
 
         requestAnimationFrame(readCircle)
 
         context.clearRect(0, 0, canvas.width, canvas.height)
-        bufferC.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-        const data = bufferC.getImageData(0, 0, canvas.width, canvas.height).data
+        // Only read a new position every 10 frames
+        if (++frameCounter%5==0) {
 
-        let avgX = 0
-        let avgY = 0
-        let counter = 0
+            bufferC.drawImage(video, 0, 0, canvas.width, canvas.height)
+            const data = bufferC.getImageData(0, 0, canvas.width, canvas.height).data
 
-        let startR = 0
-        let startC = 0
-        let endR = video.height
-        let endC = video.width
+            let avgX = 0
+            let avgY = 0
+            let counter = 0
 
-        // Limit the search area when the position can be roughly estimated from the previous frame
-        if (lastX || lastY) {
-            startR = lastY - 25
-            startC = lastX - 25
-            endR = lastY + 25
-            endC = lastX + 25
-            drawBounds(startC, startR)
-        }
+            let startR = 0
+            let startC = 0
+            let endR = video.height
+            let endC = video.width
 
-        // For every 4th row
-        for (let r=startR; r<endR; r+=4) {
-            // For every 4th column
-            for (let c=startC; c<endC; c+=4) {
+            // Limit the search area when the position can be roughly estimated from the previous frame
+            if (foundWithinBounds) {
+                startR = parseInt(Math.max(lastY - bounds, 0))
+                startC = parseInt(Math.max(lastX - bounds, 0))
+                endR = parseInt(Math.min(lastY + bounds, video.width))
+                endC = parseInt(Math.min(lastX + bounds, video.height))
+                drawBounds(startC, startR)
+            }
 
-                // Pixel coords
-                const p = r*video.width + c
+            // For every 4th row
+            for (let r=startR; r<endR; r+=4) {
+                // For every 4th column
+                for (let c=startC; c<endC; c+=4) {
 
-                const pixel = [data[p*4]/255, data[p*4+1]/255, data[p*4+2]/255]
+                    // Pixel coords
+                    const p = r*video.width + c
+                    const pixel = [data[p*4]/255, data[p*4+1]/255, data[p*4+2]/255]
 
-                if (pixel[0]<=0.75 && pixel[1] >= 0.75 && pixel[2]<=0.7) {
-                    drawDetected(c, r)
-                    counter++
-                    avgX += c
-                    avgY += r
+                    if (pixel[0]<=0.75 && pixel[1] >= 0.75 && pixel[2]<=0.7) {
+                        drawDetected(c, r)
+                        counter++
+                        avgX += c
+                        avgY += r
+                    }
                 }
+            }
+
+            if (counter>10) {
+                newX = avgX / counter
+                newY = avgY / counter
+                foundWithinBounds = true
+            } else {
+                foundWithinBounds = false
             }
         }
 
-        if (counter>10) {
-            avgX /= counter
-            avgY /= counter
+        lastX += (newX-lastX)/20
+        lastY += (newY-lastY)/20
 
-            // if (lastX || lastY) {
-            //     avgX += (lastX-avgX)/10
-            //     avgY += (lastY-avgY)/10
-
-            //     if (Math.abs(avgX-lastX)<1e-3 && Math.abs(avgY-lastY)<1e-3) {
-            //         lastX = avgX
-            //         lastY = avgY
-            //     }
-            // } else {
-                lastX = avgX
-                lastY = avgY
-            // }
-
-            plotDot(avgX, avgY)
-            // lastX = avgX
-            // lastY = avgY
-        } else {
-            lastX = 0
-            lastY = 0
-        }
+        plotDot(lastX, lastY)
     }
 
     startBtn.addEventListener("click", readCircle)
