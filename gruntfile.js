@@ -1,7 +1,7 @@
 module.exports = function(grunt){
     grunt.initConfig({
         eslint: {
-            src: ["./dev/*.js"]
+            src: ["./dev/*.js", "game.js"]
         },
 
         concat: {
@@ -34,6 +34,10 @@ module.exports = function(grunt){
             files: {
                 files: ["dev/*.js"],
                 tasks: ["eslint", "concat", "uglify"]
+            },
+            serverside: {
+                files: ["game.js"],
+                tasks: ["eslint"]
             }
         },
     })

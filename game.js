@@ -1,9 +1,8 @@
 "use strict"
 
-let sendData, returnError, websocketClients=[], keys
+let sendData, websocketClients=[], keys
 
 const fs = require("fs")
-const pug = require("pug")
 const fetch = require("node-fetch")
 const url = require("url")
 const db = require("./mongo")
@@ -16,7 +15,6 @@ try {
 const googleClientId = process.argv.includes("dev") ? keys.dev : keys.dist
 
 let rooms = []
-let usersData = []
 
 // GET
 // ===
@@ -29,10 +27,10 @@ const game = async(request, response) => {
     const roomName = params.query.roomName ? params.query.roomName : false
     console.log(roomName)
 
-    if(roomName){
+    if (roomName){
         const room = await db.getRoom(roomName)
 
-        if(!room){
+        if (!room){
             const result = await db.createRoom(roomName)
         }
     }
@@ -41,7 +39,7 @@ const game = async(request, response) => {
 
 const getGameState = (request, response, {roomName}) => {
     const data = db.getRoom(roomName)
-    const gameState = data.gameState
+    const {gameState} = data
 
     sendData({request, response, code: 200, data: gameState, contentType: "application/json"})
 }
@@ -96,11 +94,11 @@ const createRoom = async(request, response, {roomName}) => {
 
     let responseData
 
-    let roomExists = await db.getRoom(roomName);
+    const roomExists = await db.getRoom(roomName)
 
-    if(roomExists === []) {
-      let room = await db.createRoom(roomName)
-      responseData = roomName;
+    if (roomExists === []) {
+        const room = await db.createRoom(roomName)
+        responseData = roomName
     }
 
     sendData({request, response, code: 200, data: JSON.stringify({roomName: responseData}), contentType: "text/plain"})
@@ -119,109 +117,22 @@ const tokenSignin = async (request, response, {authenticator, token, roomName}) 
 
     authenticateUser(token, authenticator, ({id, name, email}) => {
 
-        let username
-        let newUser = false
-        let userFound = false
-        let userId
-
-        // // Check if the user exists, by looping through usersData object
-        // for (let userIndex in usersData) {
-
-        //     const currentUser = usersData[userIndex]
-
-        //     // Update existing user data
-        //     // if (currentUser.authUserID[authenticator]==id) {
-        //     if (currentUser.authUserID==id) {
-
-        //         userFound = true
-        //         userId = userIndex
-        //         username = currentUser.username
-
-        //         if (currentUser.email != email) {
-        //             currentUser.email = email
-        //         }
-
-        //         usersData[userId].timesLoggedIn++
-
-        //         break
-        //     }
-        // }
-
-        // if (!userFound) {
-        //     console.log("Creating new user")
-
-        //     // Create new user with incremental ID, and name defaulted to name from authenticator
-        //     userId = Object.keys(usersData).length
-
-        //     // Check if the username is taken
-        //     let usernameCount = 0
-
-        //     for(let userId in usersData) {
-        //         if (usersData[userId].username==name) {
-        //             usernameCount++
-        //         }
-        //     }
-
-        //     const newUserData = {
-        //         username : usernameCount>0 ? name+usernameCount : name,
-        //         authUserID: id,
-        //         email: undefined,
-        //         timesLoggedIn: 1,
-        //         screenshotsTaken: 0
-        //     }
-
-
-        //     newUserData.email = email
-
-        //     username = newUserData.username
-        //     newUser = true
-
-        //     // Add new user to the user data
-        //     usersData[userId] = newUserData
-        // }
-        // fs.writeFile("./usersData.json", JSON.stringify(usersData, null, 4),()=>{})
+        /*
+            TODO, check the users data in the db. Do what is needed, eg adding, updating, etc
+        */
 
         const finishAndSend = () => sendData({request, response, code: 200, data: JSON.stringify({username, userId, newUser, roomExists})})
 
-        // console.log(rooms)
         if (roomName) {
-
-            roomExists = rooms.includes(roomName)
+            // TODO, Check if the room exists
+            // roomExists = .....
             finishAndSend()
-
         } else {
             finishAndSend()
         }
     })
 }
 
-const changeUsername = (request, response, {newName, token, authenticator}) => {
-    authenticateUser(token, authenticator, ({id}) => {
-
-        let existingNameFound = false
-        let userToChange
-
-        for (let userIndex in usersData) {
-
-            const currentUser = usersData[userIndex]
-
-            if (currentUser.authUserID==id) {
-                userToChange = userIndex
-            } else if (currentUser.username==newName) {
-                existingNameFound=true
-            }
-        }
-
-        if (existingNameFound) {
-            return sendData({request, response, code: 200, data: JSON.stringify({})})
-        }
-
-        usersData[userToChange].username = newName
-
-        fs.writeFile("./usersData.json", JSON.stringify(usersData, null, 4), ()=>{})
-        sendData({request, response, code: 200, data: JSON.stringify({newName})})
-    })
-}
 
 const handleWebSocket = (connection, clients) => {
 
@@ -270,7 +181,7 @@ const handleWebSocket = (connection, clients) => {
 
                     try {
                         client.send(JSON.stringify({username: connection.meta.username, disconnectedType: connection.meta.type}))
-                    } catch(e) {
+                    } catch (e) {
                         console.warn("Error broadcasting closed connection", connection.meta, e)
                     }
                 }
@@ -294,7 +205,7 @@ const handleWebSocket = (connection, clients) => {
                 }, 10000)
             }
         })
-    } catch(e) {console.log(`\nPrevented WebSocket crash. Rooms: ${rooms} Meta: ${connection.meta}`)}
+    } catch (e) {console.log(`\nPrevented WebSocket crash. Rooms: ${rooms} Meta: ${connection.meta}`)}
 }
 
 
@@ -330,18 +241,16 @@ const getAvailableMoves = gameState => {
 }
 
 // Export routes to these functions to the server
-exports.initProject = ({sendDataCallback, error}) => {
-    sendData = sendDataCallback
-    returnError = error
+exports.initProject = ({sendDataCallback}) => {
 
-    // usersData = JSON.parse(fs.readFileSync("./usersData.json"))
+    sendData = sendDataCallback
     rooms = []
 
     return {
         get: {
             [/$/] : index,
             [/game/] : game,
-            [/getGameState/] : getGameState,
+            [/getGameState/] : getGameState
         },
         post: {
             [/getAIMove/] : getAIMove,
@@ -351,7 +260,6 @@ exports.initProject = ({sendDataCallback, error}) => {
             [/createRoom/] : createRoom,
 
             [/tokenSignin/] : tokenSignin,
-            [/changeUsername/] : changeUsername,
 
             [/saveGameState/] : saveGameState
         },
