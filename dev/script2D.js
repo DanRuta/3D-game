@@ -331,7 +331,10 @@ function getGameState(roomName) {
     .then(data => {
         //put logic here to setup game
         console.log(data.gameState)
+        if (data.gameState !== null){
         //game.board.render(data.gameState)
+          
+        }
     })
 
 }
