@@ -461,7 +461,10 @@ class GameBoard {// eslint-disable-line
     addPoint (board, row, col, player, nextPlayer) {
         this.addSphere(board, row, col, this.playerColours[player].toUpperCase())
         this.previewSphere.material.opacity = 0
-        this.setPreviewColour(nextPlayer)
+
+        if (nextPlayer!==undefined) {
+            this.setPreviewColour(nextPlayer)
+        }
     }
 
     setPreviewColour (playerIndex) {
@@ -476,7 +479,7 @@ class GameBoard {// eslint-disable-line
         for (let b=0; b<this.span; b++) {
             for (let r=0; r<this.span; r++) {
                 for (let c=0; c<this.span; c++) {
-                    if (gameState[b][r][c]) {
+                    if (!Number.isNaN(parseInt(gameState[b][r][c]))) {
                         this.addPoint(b, r, c, gameState[b][r][c])
                     }
                 }
@@ -1248,7 +1251,6 @@ const WHITE = 0xaaaaaa
 const YELLOW = 0xaaaa00
 const CYAN = 0x00aaaa
 const arrowModels = []
-const arrowNames = ["left", "right", "up", "down", "forward", "backward"]
 const rotations = [
     {x: 0.25, y: 0.0, z: 0}, // left
     {x: 0.25, y: 0.50, z: 0}, // right
@@ -1446,43 +1448,25 @@ window.addEventListener("load", () => {
 
 
     const setRotation = rotation => {
-
         camera.position.x = Math.cos(rotation*Math.PI/180) * 5
-        // camera.position.y = Math.cos(rotation*Math.PI/180) * 4
         camera.position.z = Math.sin(rotation*Math.PI/180) * 5
-
-        // this.game.board.rotation = rotation
-        // this.game.board.rotate()
     }
     setRotation(rotation=-45)
 
-
-
-
-
     renderer.domElement.addEventListener("wheel", ({deltaY}) => {
-        // game.board.rotationValue += (deltaY > 0 ? 1 : -1) * 5
-        // game.board.rotate()
-
         rotation = (rotation + (deltaY > 0 ? 1 : -1) * 5) % 360
         setRotation(rotation)
     })
 
     document.addEventListener("mousedown", event => {
-        // if (event.target == arrowsCanvas) {
-        // mouseIsDown = true
-        // } else if (event.target == rendererDomElement) {
         game.board.mouseIsDown = true
-        // }
     })
 
     document.addEventListener("mouseup", () => {
-        // mouseIsDown = false
         game.board.mouseIsDown = false
     })
 
     document.addEventListener("click", () => {
-        // mouseIsDown = false
         game.board.mouseIsDown = false
     })
 

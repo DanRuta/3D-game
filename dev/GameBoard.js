@@ -461,7 +461,10 @@ class GameBoard {// eslint-disable-line
     addPoint (board, row, col, player, nextPlayer) {
         this.addSphere(board, row, col, this.playerColours[player].toUpperCase())
         this.previewSphere.material.opacity = 0
-        this.setPreviewColour(nextPlayer)
+
+        if (nextPlayer!==undefined) {
+            this.setPreviewColour(nextPlayer)
+        }
     }
 
     setPreviewColour (playerIndex) {
@@ -476,7 +479,7 @@ class GameBoard {// eslint-disable-line
         for (let b=0; b<this.span; b++) {
             for (let r=0; r<this.span; r++) {
                 for (let c=0; c<this.span; c++) {
-                    if (gameState[b][r][c]) {
+                    if (!Number.isNaN(parseInt(gameState[b][r][c]))) {
                         this.addPoint(b, r, c, gameState[b][r][c])
                     }
                 }
