@@ -357,7 +357,11 @@ class GameBoard {// eslint-disable-line
                     const {b, r, c} = this.previewSphere.data
 
                     if (this.game.gameState[b][r][c]===" ") {
-                        this.game.makeMove(this.game.playerIndex, b, r, c)
+                        if (ws){
+                            sendMove(this.game.playerIndex, b, r, c, this.game.gameState)
+                        } else { 
+                            this.game.makeMove(this.game.playerIndex, b, r, c)
+                        }
                     }
                 }
 
@@ -698,6 +702,9 @@ class GameLogic {// eslint-disable-line
         // winsDisplay.style.display = "none"
 
         this.players[this.playerIndex].pickMove(this.gameState)
+        if (ws){
+            sendState(this.gameState)
+        }
     }
 
     isWinningMove (boardIndex, tileY, tileX, player) {

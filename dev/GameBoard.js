@@ -357,7 +357,11 @@ class GameBoard {// eslint-disable-line
                     const {b, r, c} = this.previewSphere.data
 
                     if (this.game.gameState[b][r][c]===" ") {
-                        this.game.makeMove(this.game.playerIndex, b, r, c)
+                        if (ws){
+                            sendMove(this.game.playerIndex, b, r, c, this.game.gameState)
+                        } else { 
+                            this.game.makeMove(this.game.playerIndex, b, r, c)
+                        }
                     }
                 }
 

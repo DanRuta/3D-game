@@ -267,7 +267,7 @@ function connectWebSockets(roomName) {
         } else if (data.type === "move") {
 
             const player = data.playerIndex
-            const {b, r, c} = datab
+            const {b, r, c} = data
             console.log(player, b, r, c)
             game.makeMove(player, b, r, c)
         }
@@ -285,7 +285,7 @@ function getURLParameter(name) {
     return decodeURIComponent((new RegExp("[?|&]" + name + "=" + "([^&;]+?)(&|#|;|$)").exec(location.search) || [null, ""])[1].replace(/\+/g, "%20")) || null
 }
 
-function sendMove(playerIndex, b, r, c) {
+function sendMove(playerIndex, b, r, c, gameState) {
     if (ws){
         ws.send(JSON.stringify({
             playerIndex: playerIndex,
@@ -294,9 +294,19 @@ function sendMove(playerIndex, b, r, c) {
             c: c,
             userId: "1234",
             username: "rob",
-            type: "text",
             room: roomNameValue,
-            type: "move"
+            type: "move",
+            gameState: gameState
+        }))
+    }
+} 
+
+function sendState(gameState) {
+    if (ws){
+        ws.send(JSON.stringify({
+            room: roomNameValue,
+            type: "state",
+            gameState: gameState
         }))
     }
 }

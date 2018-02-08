@@ -155,6 +155,9 @@ class GameLogic {// eslint-disable-line
         // winsDisplay.style.display = "none"
 
         this.players[this.playerIndex].pickMove(this.gameState)
+        if (ws){
+            sendState(this.gameState)
+        }
     }
 
     isWinningMove (boardIndex, tileY, tileX, player) {

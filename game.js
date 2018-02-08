@@ -34,6 +34,7 @@ const sendGame2D = async(request, response) => {
             const result = await db.createRoom(roomName)
         }
     }
+    //Send the game state across somehow
     sendData({request, response, code: 200, data: fs.readFileSync("game2d.html", "utf8"), contentType: "text/html"})
 }
 
@@ -59,7 +60,7 @@ const getAIMove = async (request, response, {gameState}) => {
         qs = qs[0]
 
         // No knowledge of this state. Set to 1 and make a random move
-        if (qs===undefined) {
+        if (qs===undefined) { 
 
             console.log("dunno lol")
             // TODO, set the db value to 1
@@ -134,30 +135,39 @@ const tokenSignin = async (request, response, {authenticator, token, roomName}) 
 }
 
 
-const handleWebSocket = (connection, clients) => {
+const handleWebSocket = async (connection, clients) => {
 
     websocketClients = clients
 
     try {
+        
+      
         connection.on("message", message => {
 
             message = JSON.parse(message)
-
-            // Register the user data to the connection
-            if (!connection.meta) {
-                connection.meta = {
-                    userId: message.userId,
-                    username : message.username,
-                    room: message.room,
-                    type: message.type
+            //Save the room state else talk back
+            if (message.type ==  "state"){
+                const save = db.updateRoom(message.room, message.gameState)
+              
+            } else  {
+              
+                // Register the user data to the connection
+                if (!connection.meta) {
+                    connection.meta = {
+                        userId: message.userId,
+                        username : message.username,
+                        room: message.room,
+                        type: message.type
+                    }
                 }
+
+                websocketClients.forEach(client => {
+                    if (client.meta && client.meta.room == connection.meta.room) {
+                        client.send(JSON.stringify(message))
+                    }
+                })
             }
-
-            websocketClients.forEach(client => {
-                if (client.meta && client.meta.room == connection.meta.room) {
-                    client.send(JSON.stringify(message))
-                }
-            })
+          
         })
 
         connection.on("close", () => {
