@@ -277,6 +277,8 @@ function connectWebSockets(roomName) {
         console.log("connect ws")
         console.log(roomName)
         ws.send(JSON.stringify({userId: "1234", username: "rob", type: "setUp", room: roomName }))
+        
+        getGameState(roomName)
     })
 }
 
@@ -319,9 +321,17 @@ function saveGameState(roomName, gameState) {
 }
 
 function getGameState(roomName) {
-    const data = fetch("./getGameState", {
+    fetch("./getGameState?roomName=" + roomName, {
         method: "get",
-        body: JSON.stringify({roomName: roomName})
+        headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        }
+    }).then(res => res.json())
+    .then(data => {
+        //put logic here to setup game
+        console.log(data.gameState)
+        //game.board.render(data.gameState)
     })
-    //game.setState(gmaeState)
+
 }

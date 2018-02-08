@@ -25,7 +25,6 @@ const index = (request, response) => {
 const sendGame2D = async(request, response) => {
     const params = url.parse(request.url, true)
     const roomName = params.query.roomName ? params.query.roomName : false
-    console.log(roomName)
 
     if (roomName){
         const room = await db.getRoom(roomName)
@@ -34,15 +33,20 @@ const sendGame2D = async(request, response) => {
             const result = await db.createRoom(roomName)
         }
     }
-    //Send the game state across somehow
     sendData({request, response, code: 200, data: fs.readFileSync("game2d.html", "utf8"), contentType: "text/html"})
 }
 
-const getGameState = (request, response, {roomName}) => {
-    const data = db.getRoom(roomName)
-    const {gameState} = data
-
-    sendData({request, response, code: 200, data: gameState, contentType: "application/json"})
+const getGameState = async(request, response) => {
+    const params = url.parse(request.url, true)
+    const roomName = params.query.roomName ? params.query.roomName : false
+    console.log(roomName)
+  
+    const data = await db.getRoom(roomName)
+    const gameState = data.gameState? data.gameState : null
+    const dataToSend = JSON.stringify({gameState: gameState})
+    console.log("here")
+    console.log(dataToSend)
+    sendData({request, response, code: 200, data: dataToSend, contentType: "application/json"})
 }
 
 
