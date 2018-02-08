@@ -14,6 +14,10 @@ module.exports = function(grunt){
             files: {
                 src: ["dev/GameBoard.js", "dev/GamePlayer.js", "dev/GameLogic.js"],
                 dest: "dist/game.concat.js"
+            },
+            vr: {
+                src: ["dev/GameBoard.js", "dev/GamePlayer.js", "dev/GameLogic.js", "dev/VRGameBoard.js", "dev/scriptVR.js"],
+                dest: "dist/scriptVR.concat.js"
             }
         },
 
@@ -28,7 +32,7 @@ module.exports = function(grunt){
                 files: {
                     "dist/game.min.js" : ["dist/game.concat.js"],
                     "dist/script2D.min.js" : ["dev/script2D.js"],
-                    "dist/scriptVR.min.js" : ["dev/scriptVR.js"]
+                    "dist/scriptVR.min.js" : ["dist/scriptVR.concat.js"]
                 }
             }
         },

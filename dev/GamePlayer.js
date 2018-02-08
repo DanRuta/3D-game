@@ -49,5 +49,6 @@ class GamePlayer {// eslint-disable-line
 
 }
 
+typeof window!="undefined" && (window.exports = window.exports || {})
 typeof window!="undefined" && (window.GamePlayer = GamePlayer)
 exports.GamePlayer = GamePlayer

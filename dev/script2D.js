@@ -1,4 +1,5 @@
 "use strict"
+
 let ws
 let roomNameValue
 
@@ -9,10 +10,12 @@ window.getParameters = () => {
     // Pull query parameters from url
     const parametersString = location.search.substring(1)
 
-    parametersString.length ? parametersString.split("&").forEach(p => {
-        const [k,v] =  p.split("=")
-        parameters[k] = v
-    }) : null
+    if (parametersString.length) {
+        parametersString.split("&").forEach(p => {
+            const [k,v] =  p.split("=")
+            parameters[k] = v
+        })
+    }
 
     return parameters
 }
@@ -31,6 +34,7 @@ window.addEventListener("load", () => {
 
         window.game = new GameLogic({
             gravityEnabled: !g || g=="1",
+            gameBoard: GameBoard,
             span: parseInt(span) || 3,
             players: parseInt(p) || 2
             // isTraining: false,

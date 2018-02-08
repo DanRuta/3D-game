@@ -1,6 +1,8 @@
 "use strict"
 
 let ws
+let roomNameValue
+
 let hoveredObject
 let clickedObject
 let mouseIsDown = false
@@ -27,6 +29,23 @@ const positions = [
     {x: 0, y: 0, z: -0.125}, // forward
     {x: 0, y: 0, z: 0.125} // backward
 ]
+
+window.getParameters = () => {
+
+    const parameters = {}
+
+    // Pull query parameters from url
+    const parametersString = location.search.substring(1)
+
+    if (parametersString.length) {
+        parametersString.split("&").forEach(p => {
+            const [k,v] =  p.split("=")
+            parameters[k] = v
+        })
+    }
+
+    return parameters
+}
 
 
 window.addEventListener("load", () => {
@@ -99,8 +118,6 @@ window.addEventListener("load", () => {
         camera.position.y,
         camera.position.z
     )
-    controls.noPan  = true
-    controls.noZoom = true
 
     // Set VR controls if available
     const setOrientationControls = event => {
@@ -236,6 +253,27 @@ window.addEventListener("load", () => {
         // this.game.board.rotate()
     }
     setRotation(rotation=-45)
+
+
+    const resetGame = () => {
+
+        const {g, span, p} = getParameters()
+
+        window.game = new GameLogic({
+            gravityEnabled: !g || g=="1",
+            gameBoard: VRGameBoard,
+            span: parseInt(span) || 3,
+            players: parseInt(p) || 2,
+            isVR: true
+        })
+        game.board.loadTHREEjsItems({
+            scene: scene,
+            camera: camera,
+            raycaster: raycaster,
+            mouse: mouse,
+        })
+    }
+    resetGame()
 
 
     window.addEventListener("wheel", ({deltaY}) => {

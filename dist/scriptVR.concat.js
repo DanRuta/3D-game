@@ -1008,4 +1008,491 @@ class GameLogic {// eslint-disable-line
 typeof window!="undefined" && (window.exports = window.exports || {})
 typeof window!="undefined" && (window.GameLogic = GameLogic)
 exports.GameLogic = GameLogic
-//# sourceMappingURL=game.concat.js.map
+"use strict"
+
+class VRGameBoard extends GameBoard {// eslint-disable-line
+
+    constructor (game) {
+        super(game, true)
+
+        this.arrowNames = ["left", "right", "up", "down", "forward", "backward"]
+    }
+
+    loadTHREEjsItems (items) {
+        this.scene = items.scene
+        this.camera = items.camera
+        this.raycaster = items.raycaster
+        this.mouse = items.mouse
+        this.renderer = items.renderer
+        this.boardElement = items.boardElement
+
+        this.heightOffset = 0.5
+        this.scene.add(this.previewSphere)
+
+        this.initBoards()
+        this.renderLoop()
+        this.rotate()
+
+        this.boardElement.addEventListener("mousemove", event => {
+            const sizeY = event.target.height
+            const sizeX = event.target.width
+            this.mouse.x = event.offsetX / sizeX * 2 - 1
+            this.mouse.y = -event.offsetY / sizeY * 2 + 1
+        }, false)
+    }
+
+    highlightArrow (index) {
+
+        const arrowModel = arrowModels.filter(a => a.data.arrowIndex==index)
+
+        // Clear old arrow
+        if (this.clickedObject) {
+            this.clickedObject.children.forEach(c => c.material.emissive.setHex(this.colours.BRIGHTGREY))
+        }
+
+        // Set new one to cyan
+        arrowModel[0].children.forEach(c => c.material.emissive.setHex(this.colours.CYAN))
+        this.clickedObject = arrowModel[0]
+    }
+
+    renderLoop () {
+
+        requestAnimationFrame(() => this.renderLoop())
+
+        this.lerpBoxes()
+        this.lerpSpheres()
+
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true)
+
+        if (intersects.length) {
+
+            if (this.hoveredObject && this.hoveredObject.type=="Scene") {
+
+                document.body.style.cursor = "pointer"
+
+                if (this.hoveredObject == this.clickedObject) {
+                    // do nothing
+                } else {
+
+                    if (this.mouseIsDown) {
+
+                        this.highlightArrow(this.hoveredObject.data.arrowIndex)
+
+                        console.log("clicked", arrowNames[this.clickedObject.data.arrowIndex])
+
+                        if (ws) {
+                            ws.send(JSON.stringify({
+                                direction: arrowNames[clickedObject.data.arrowIndex],
+                                userId: "1234",
+                                username: "rob",
+                                type: "text",
+                                room: roomNameValue,
+                                type: "gravity"
+                            }))
+                        } else {
+                            this.game.shiftGravity(arrowNames[clickedObject.data.arrowIndex])
+                        }
+
+                    } else {
+                        // Hovering over non clicked item without the mouse down
+                        arrowModels.forEach(arrow => {
+                            if (arrow != clickedObject) {
+                                arrow.children.forEach(c => c.material.emissive.setHex(this.colours.BRIGHTGREY))
+                            }
+                        })
+
+                        if (this.hoveredObject != clickedObject) {
+                            this.hoveredObject.children.forEach(c => c.material.emissive.setHex(this.colours.YELLOW))
+                        }
+                    }
+                }
+
+
+            } else {
+
+                // If still hovering on the same thing...
+                if (this.hoveredObject && (this.hoveredObject==intersects[0].object || this.hoveredObject==intersects[0].object.parent)) {
+
+
+                    if (this.mouseIsDown && !this.hoveredObject.data.isClicked) {
+                        this.hoveredObject.data.isClicked = true
+                        setTimeout(() => {
+                            if (this.hoveredObject) {
+                                this.hoveredObject.data.isClicked = false
+                            }
+                        }, 500)
+
+                        const {b, r, c} = this.previewSphere.data
+
+                        if (this.game.gameState[b][r][c]===" ") {
+                            if (ws){
+                                sendMove(this.game.playerIndex, b, r, c, this.game.gameState)
+                            } else {
+                                this.game.makeMove(this.game.playerIndex, b, r, c)
+                            }
+                        }
+                    }
+
+                } else {
+
+                    // Set the currently hovered over object
+                    this.hoveredObject = intersects[0].object.data ? intersects[0].object : intersects[0].object.parent
+                    this.clearHighlightedBoxes()
+
+                    if (this.hoveredObject.data && this.hoveredObject.type!="Scene") {
+                        // Also TODO, decide which one of these to do, based on the current gravity
+
+                        if (!this.isLerpingBoxes && !this.someSphereIsLerping) {
+
+                            if (this.game.gravityEnabled) {
+                                if (this.hoveredObject.data) {
+                                    switch (this.game.gravity.axis) {
+                                        case 0:
+                                            this.highlightColumn(this.hoveredObject.data)
+                                            break
+                                        case 1:
+                                            this.highlightRowY(this.hoveredObject.data)
+                                            break
+                                        case 2:
+                                            this.highlightRowX(this.hoveredObject.data)
+                                            break
+                                    }
+                                }
+                            } else {
+                                // Highlight only the hovered over box
+                                const {b, r, c} = this.hoveredObject.data
+                                this.boxes[b][r][c].material.opacity = this.OPACITY_ON
+                                this.boxes[b][r][c].material.emissive.setHex(this.colours.DARKGREY)
+                                this.highlightedBoxes.push(this.boxes[b][r][c])
+                            }
+
+                            // Render the preview sphere at the correct location
+                            const pos = this.getPreviewPosition(this.hoveredObject)
+
+                            if (pos) {
+                                this.previewSphere.position.x = pos.x
+                                this.previewSphere.position.y = pos.y
+                                this.previewSphere.position.z = pos.z
+                                this.previewSphere.data = {
+                                    b: pos.b,
+                                    r: pos.r,
+                                    c: pos.c
+                                }
+                                this.previewSphere.material.opacity = 0.5
+                            }
+                            // === ?
+                            // else {
+                            //     this.previewSphere.material.opacity = 0
+                            // }
+                        }
+                    }
+                }
+            }
+
+        } else {
+
+            if (this.hoveredObject && this.hoveredObject.type=="Scene") {
+
+                document.body.style.cursor = "default"
+
+                if (arrowModels) {
+                    arrowModels.forEach(arrow => {
+
+                        if (arrow != this.clickedObject) {
+                            arrow.children.forEach(c => c.material.emissive.setHex(this.colours.BRIGHTGREY))
+                        }
+                    })
+                }
+
+            } else {
+
+                this.clearHighlightedBoxes()
+                this.previewSphere.material.opacity = 0
+
+                if (this.hoveredObject) {
+                    if (this.hoveredObject.material) {
+                        this.hoveredObject.material.emissive.setHex(this.colours.LIGHTGREY)
+                        this.hoveredObject.material.opacity = this.OPACITY_OFF
+                        this.hoveredObject.data.isClicked = false
+                    } else if (this.hoveredObject.parent && this.hoveredObject.parent.material) {
+                        this.hoveredObject.parent.material.emissive.setHex(this.colours.LIGHTGREY)
+                        this.hoveredObject.parent.material.opacity = this.OPACITY_OFF
+                        this.hoveredObject.parent.data.isClicked = false
+                    }
+
+                }
+            }
+
+
+            this.hoveredObject = null
+        }
+
+    }
+
+    rotate () {
+
+    }
+
+}
+"use strict"
+
+let ws
+let roomNameValue
+
+let hoveredObject
+let clickedObject
+const mouseIsDown = false
+let rotation = 45
+
+const WHITE = 0xaaaaaa
+const YELLOW = 0xaaaa00
+const CYAN = 0x00aaaa
+const arrowModels = []
+const arrowNames = ["left", "right", "up", "down", "forward", "backward"]
+const rotations = [
+    {x: 0.25, y: 0.0, z: 0}, // left
+    {x: 0.25, y: 0.50, z: 0}, // right
+    {x: 0.25, y: 0.75, z: 0}, // up
+    {x: 0.25, y: 0.25, z: 0}, // down
+    {x: 0.25, y: 0.50, z: 0.25}, // forward
+    {x: 0.25, y: 0.50, z: 0.75} // backward
+]
+const positions = [
+    {x: -0.125, y: -0.4, z: 0}, // left
+    {x: 0.125, y: -0.4, z: 0}, // right
+    {x: 0, y: -0.3, z: 0}, // up
+    {x: 0, y: -0.5, z: 0}, // down
+    {x: 0, y: -0.4, z: -0.125}, // forward
+    {x: 0, y: -0.4, z: 0.125} // backward
+]
+
+window.getParameters = () => {
+
+    const parameters = {}
+
+    // Pull query parameters from url
+    const parametersString = location.search.substring(1)
+
+    if (parametersString.length) {
+        parametersString.split("&").forEach(p => {
+            const [k,v] =  p.split("=")
+            parameters[k] = v
+        })
+    }
+
+    return parameters
+}
+
+
+window.addEventListener("load", () => {
+
+    // Prevent the device from going into sleep mode, to keep the screen turned on
+    screen.keepAwake = true
+
+    // Initialise THREEjs components, starting with the renderer
+    const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true})
+    renderer.setPixelRatio(window.devicePixelRatio)
+    renderer.setSize(window.innerWidth, window.innerHeight)
+    document.body.appendChild(renderer.domElement)
+
+    renderer.domElement.addEventListener("click", () => {
+        new NoSleep().enable()
+
+        if (!window.location.href.includes("localhost")) {
+            document.fullscreenEnabled && renderer.domElement.requestFullScreen() ||
+            document.webkitFullscreenEnabled && renderer.domElement.webkitRequestFullScreen() ||
+            document.mozFullScreenEnabled && renderer.domElement.mozRequestFullScreen() ||
+            document.msFullScreenEnabled && renderer.domElement.msRequestFullScreen()
+        }
+    })
+
+    let effect = new THREE.VREffect(renderer)
+    effect.separation = 0
+    effect.setSize(window.innerWidth, window.innerHeight)
+
+    let vrDisplay
+    if (navigator.getVRDisplays) {
+        navigator.getVRDisplays().then(displays => displays.length && (vrDisplay = displays[0]))
+    }
+
+
+    // Button to enable VR mode
+    enterVRButton.addEventListener("click", () => {
+        const controls = document.getElementById("controls")
+
+        if (enterVRButton.classList.contains("small")) {
+            effect = new THREE.VREffect(renderer)
+            effect.separation = 0
+            effect.setSize(window.innerWidth, window.innerHeight)
+
+            enterVRButton.classList.remove("small")
+        } else {
+            if (navigator.userAgent.includes("Mobile VR")) {
+                vrDisplay.requestPresent([{source: renderer.domElement}])
+            } else {
+                effect = new THREE.StereoEffect(renderer)
+                effect.separation = 0
+                effect.setSize(window.innerWidth, window.innerHeight)
+            }
+
+            enterVRButton.classList.add("small")
+        }
+    })
+
+    // Scenes and camera
+    const fov = 70
+    const scene = new THREE.Scene()
+    const camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 1, 1000)
+    scene.add(camera)
+    camera.rotation.order = "YXZ"
+    camera.position.z = 4
+    camera.position.y = 2
+
+    // Controls
+    let controls = new THREE.OrbitControls(camera, renderer.domElement)
+    controls.target.set(
+        // camera.position.x+0.15,
+        Math.cos(camera.position.x*Math.PI/180) * 4,
+        camera.position.y,
+        // camera.position.z
+        Math.sin(camera.position.z*Math.PI/180) * 4
+    )
+
+    // Set VR controls if available
+    const setOrientationControls = event => {
+
+        if (!event.alpha) return
+
+        controls = new THREE.VRControls(camera)
+        controls.update()
+
+        window.removeEventListener("deviceorientation", setOrientationControls)
+    }
+    window.addEventListener("deviceorientation", setOrientationControls)
+
+
+    const loader = new THREE.ObjectLoader()
+    const raycaster = new THREE.Raycaster()
+    const mouse = new THREE.Vector2()
+    const light = new THREE.DirectionalLight( 0xffffff, 0.5 )
+    light.position.set( 0, 1, 0 ).normalize()
+    scene.add(light)
+
+
+
+    // Add arrow models
+    for (let a=0; a<6; a++) {
+        loader.load("lib/arrow.json", model => {
+
+            model.position.x = positions[a].x * 2 * Math.PI
+            model.position.y = positions[a].y * 2 * Math.PI
+            model.position.z = positions[a].z * 2 * Math.PI
+
+            model.rotation.x = rotations[a].x * 2 * Math.PI
+            model.rotation.y = rotations[a].y * 2 * Math.PI
+            model.rotation.z = rotations[a].z * 2 * Math.PI
+
+            model.children.forEach(c => {
+                if (a==3) {
+                    c.material.emissive.setHex(CYAN)
+                    clickedObject = model
+                } else {
+                    c.material.emissive.setHex(WHITE)
+                }
+            })
+
+            arrowModels.push(model)
+            model.data = {arrowIndex: a}
+            scene.add(model)
+        })
+    }
+
+
+    const resetGame = () => {
+
+        const {g, span, p} = getParameters()
+
+        window.game = new GameLogic({
+            gravityEnabled: !g || g=="1",
+            gameBoard: VRGameBoard,
+            span: parseInt(span) || 3,
+            players: parseInt(p) || 2,
+            isVR: true
+        })
+        game.board.loadTHREEjsItems({
+            scene: scene,
+            camera: camera,
+            raycaster: raycaster,
+            mouse: mouse,
+            renderer: renderer,
+            boardElement: renderer.domElement
+        })
+    }
+    resetGame()
+
+    const render = () => {
+
+        requestAnimationFrame(render)
+        controls.update()
+
+        camera.lookAt(scene.position)
+        camera.updateMatrixWorld()
+        raycaster.setFromCamera(mouse, camera)
+
+        effect.render(scene, camera)
+
+    }
+    render()
+
+
+    const setRotation = rotation => {
+
+        camera.position.x = Math.cos(rotation*Math.PI/180) * 5
+        // camera.position.y = Math.cos(rotation*Math.PI/180) * 4
+        camera.position.z = Math.sin(rotation*Math.PI/180) * 5
+
+        // this.game.board.rotation = rotation
+        // this.game.board.rotate()
+    }
+    setRotation(rotation=-45)
+
+
+
+
+
+    renderer.domElement.addEventListener("wheel", ({deltaY}) => {
+        // game.board.rotationValue += (deltaY > 0 ? 1 : -1) * 5
+        // game.board.rotate()
+
+        rotation = (rotation + (deltaY > 0 ? 1 : -1) * 5) % 360
+        setRotation(rotation)
+    })
+
+    document.addEventListener("mousedown", event => {
+        // if (event.target == arrowsCanvas) {
+        // mouseIsDown = true
+        // } else if (event.target == rendererDomElement) {
+        game.board.mouseIsDown = true
+        // }
+    })
+
+    document.addEventListener("mouseup", () => {
+        // mouseIsDown = false
+        game.board.mouseIsDown = false
+    })
+
+    document.addEventListener("click", () => {
+        // mouseIsDown = false
+        game.board.mouseIsDown = false
+    })
+
+    window.addEventListener("keydown", e => {
+        console.log("keydown", e)
+        if (e.code == "Space") {
+            game.board.toggleExploded()
+        }
+    })
+
+    console.log("hi")
+})
+//# sourceMappingURL=scriptVR.concat.js.map

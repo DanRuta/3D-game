@@ -2,7 +2,7 @@
 
 class GameLogic {// eslint-disable-line
 
-    constructor ({gameState, gravityEnabled=true, span=3, players=2, isTraining, isMultiplayer, aiOpponent}={}) {
+    constructor ({gameState, gameBoard, gravityEnabled=true, span=3, players=2, isTraining, isMultiplayer, aiOpponent, isVR}={}) {
 
         this.players = []
         this.gravityEnabled = gravityEnabled
@@ -36,7 +36,7 @@ class GameLogic {// eslint-disable-line
 
         // Randomize who starts
         this.playerIndex = Math.floor(Math.random()*players)
-        this.board = new GameBoard(this)
+        this.board = new gameBoard(this, isVR)
 
         // Set the first player to either AI or human (aka the actual player)
         if (this.aiOpponent) {
@@ -444,5 +444,6 @@ class GameLogic {// eslint-disable-line
 
 }
 
+typeof window!="undefined" && (window.exports = window.exports || {})
 typeof window!="undefined" && (window.GameLogic = GameLogic)
 exports.GameLogic = GameLogic

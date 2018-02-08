@@ -2,7 +2,7 @@
 
 class GameBoard {// eslint-disable-line
 
-    constructor (game) {
+    constructor (game, isVR) {
 
         const {span} = game
 
@@ -10,6 +10,7 @@ class GameBoard {// eslint-disable-line
         this.rotation = -45
         this.span = span
         this.game = game // Two way binding
+        this.heightOffset = 0
 
         // Rendering constants
         this.BOX_WIDTH = 0.5
@@ -33,10 +34,22 @@ class GameBoard {// eslint-disable-line
             BLACK: 0x000000,
             CYAN: 0x00ffff,
             PINK: 0xffc0cb,
+            BRIGHTGREY: 0xaaaaaa,
             LIGHTGREY: 0x999999,
             DARKGREY: 0x666666,
             WHITE: 0xffffff
         }
+
+        // Create a render sphere to move around to the correct location
+        const previewColour = this.colours[this.playerColours[this.game.playerIndex].toUpperCase()]
+        const previewSphereGeometry = new THREE.SphereGeometry(this.SPHERE_RADIUS, this.SPHERE_V_COUNT, this.SPHERE_V_COUNT)
+        const previewSphereMaterial = new THREE.MeshLambertMaterial({color: previewColour, transparent: true})
+        previewSphereMaterial.opacity = 0
+        previewSphereMaterial.emissive.setHex(previewColour)
+        this.previewSphere = new THREE.Mesh(previewSphereGeometry, previewSphereMaterial)
+
+
+        if (isVR) return
 
         this.scene = new THREE.Scene()
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
@@ -54,13 +67,6 @@ class GameBoard {// eslint-disable-line
 
         this.camera.position.y = 2
 
-        // Create a render sphere to move around to the correct location
-        const previewColour = this.colours[this.playerColours[this.game.playerIndex].toUpperCase()]
-        const previewSphereGeometry = new THREE.SphereGeometry(this.SPHERE_RADIUS, this.SPHERE_V_COUNT, this.SPHERE_V_COUNT)
-        const previewSphereMaterial = new THREE.MeshLambertMaterial({color: previewColour, transparent: true})
-        previewSphereMaterial.opacity = 0
-        previewSphereMaterial.emissive.setHex(previewColour) // TOOD, player colour
-        this.previewSphere = new THREE.Mesh(previewSphereGeometry, previewSphereMaterial)
         this.scene.add(this.previewSphere)
 
         this.initBoards()
@@ -101,7 +107,7 @@ class GameBoard {// eslint-disable-line
         box.material.emissive.setHex(this.colours.LIGHTGREY)
 
         box.position.x = (c - this.SPREAD) * this.BOX_WIDTH * this.SPACING
-        box.position.y = (b - this.SPREAD) * this.BOX_WIDTH * this.SPACING
+        box.position.y = (b - this.SPREAD) * this.BOX_WIDTH * this.SPACING + this.heightOffset
         box.position.z = (r - this.SPREAD) * this.BOX_WIDTH * this.SPACING
         box.data = {b, r, c}
         box.origPos = {
@@ -121,7 +127,7 @@ class GameBoard {// eslint-disable-line
         sphere.material.emissive.setHex(this.colours[colour.toUpperCase()])
 
         sphere.position.x = (c - this.SPREAD) * this.BOX_WIDTH * this.SPACING
-        sphere.position.y = (b - this.SPREAD) * this.BOX_WIDTH * this.SPACING
+        sphere.position.y = (b - this.SPREAD) * this.BOX_WIDTH * this.SPACING + this.heightOffset
         sphere.position.z = (r - this.SPREAD) * this.BOX_WIDTH * this.SPACING
         sphere.origPos = {
             x: sphere.position.x,
@@ -267,10 +273,8 @@ class GameBoard {// eslint-disable-line
         this.spheres[start.b][start.r][start.c] = null
     }
 
-    renderLoop () {
-        requestAnimationFrame(() => this.renderLoop())
-
-        // Lerp the boxes into position, when exploded
+    // Lerp the boxes into position, when exploded
+    lerpBoxes () {
         if (this.isLerpingBoxes) {
             for (let b=0; b<this.span; b++) {
                 for (let r=0; r<this.span; r++) {
@@ -305,17 +309,20 @@ class GameBoard {// eslint-disable-line
                 }
             }
         }
+    }
 
-        let someSphereIsLerping = false
+    // Lerp the spheres into their new place
+    lerpSpheres () {
 
-        // Lerp the spheres into their new place
+        this.someSphereIsLerping = false
+
         for (let b=0; b<this.span; b++) {
             for (let r=0; r<this.span; r++) {
                 for (let c=0; c<this.span; c++) {
 
                     if (this.spheres[b][r][c] && this.spheres[b][r][c].isLerping) {
 
-                        someSphereIsLerping = true
+                        this.someSphereIsLerping = true
 
                         const sphere = this.spheres[b][r][c]
                         const {axis} = sphere.newPos
@@ -331,7 +338,13 @@ class GameBoard {// eslint-disable-line
                 }
             }
         }
+    }
 
+    renderLoop () {
+
+        requestAnimationFrame(() => this.renderLoop())
+        this.lerpBoxes()
+        this.lerpSpheres()
 
         this.camera.lookAt(this.scene.position)
         this.camera.updateMatrixWorld()
@@ -359,7 +372,7 @@ class GameBoard {// eslint-disable-line
                     if (this.game.gameState[b][r][c]===" ") {
                         if (ws){
                             sendMove(this.game.playerIndex, b, r, c, this.game.gameState)
-                        } else { 
+                        } else {
                             this.game.makeMove(this.game.playerIndex, b, r, c)
                         }
                     }
@@ -374,7 +387,7 @@ class GameBoard {// eslint-disable-line
                 if (this.hoveredObject.data) {
                     // Also TODO, decide which one of these to do, based on the current gravity
 
-                    if (!this.isLerpingBoxes && !someSphereIsLerping) {
+                    if (!this.isLerpingBoxes && !this.someSphereIsLerping) {
 
                         if (this.game.gravityEnabled) {
                             switch (this.game.gravity.axis) {
