@@ -210,7 +210,7 @@ class GameBoard {// eslint-disable-line
                     pos.b -= incr
                 }
 
-                pos.y = (pos.b - this.SPREAD) * this.BOX_WIDTH * this.SPACING
+                pos.y = (pos.b - this.SPREAD) * this.BOX_WIDTH * this.SPACING + this.heightOffset
                 break
 
             // left/right
