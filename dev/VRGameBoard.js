@@ -6,6 +6,7 @@ class VRGameBoard extends GameBoard {// eslint-disable-line
         super(game, true)
 
         this.arrowNames = ["left", "right", "up", "down", "forward", "backward"]
+        this.arrowModels = []
     }
 
     loadTHREEjsItems (items) {
@@ -31,9 +32,44 @@ class VRGameBoard extends GameBoard {// eslint-disable-line
         }, false)
     }
 
+    // Add arrow models
+    makeArrows () {
+
+        const loader = new THREE.ObjectLoader()
+
+        // Don't re-draw them
+        if (!this.arrowModels.length) {
+            for (let a=0; a<6; a++) {
+                loader.load("lib/arrow.json", model => {
+
+                    model.position.x = positions[a].x * 2 * Math.PI
+                    model.position.y = positions[a].y * 2 * Math.PI
+                    model.position.z = positions[a].z * 2 * Math.PI
+
+                    model.rotation.x = rotations[a].x * 2 * Math.PI
+                    model.rotation.y = rotations[a].y * 2 * Math.PI
+                    model.rotation.z = rotations[a].z * 2 * Math.PI
+
+                    model.children.forEach(c => {
+                        if (a==3) {
+                            c.material.emissive.setHex(this.colours.CYAN)
+                            this.clickedObject = model
+                        } else {
+                            c.material.emissive.setHex(this.colours.BRIGHTGREY)
+                        }
+                    })
+
+                    this.arrowModels.push(model)
+                    model.data = {arrowIndex: a}
+                    this.scene.add(model)
+                })
+            }
+        }
+    }
+
     highlightArrow (index) {
 
-        const arrowModel = arrowModels.filter(a => a.data.arrowIndex==index)
+        const arrowModel = this.arrowModels.filter(a => a.data.arrowIndex==index)
 
         // Clear old arrow
         if (this.clickedObject) {
@@ -68,11 +104,11 @@ class VRGameBoard extends GameBoard {// eslint-disable-line
 
                         this.highlightArrow(this.hoveredObject.data.arrowIndex)
 
-                        console.log("clicked", arrowNames[this.clickedObject.data.arrowIndex])
+                        console.log("clicked", this.arrowNames[this.clickedObject.data.arrowIndex])
 
                         if (ws) {
                             ws.send(JSON.stringify({
-                                direction: arrowNames[clickedObject.data.arrowIndex],
+                                direction: this.arrowNames[this.clickedObject.data.arrowIndex],
                                 userId: "1234",
                                 username: "rob",
                                 type: "text",
@@ -80,18 +116,18 @@ class VRGameBoard extends GameBoard {// eslint-disable-line
                                 type: "gravity"
                             }))
                         } else {
-                            this.game.shiftGravity(arrowNames[clickedObject.data.arrowIndex])
+                            this.game.shiftGravity(this.arrowNames[this.clickedObject.data.arrowIndex])
                         }
 
                     } else {
                         // Hovering over non clicked item without the mouse down
-                        arrowModels.forEach(arrow => {
-                            if (arrow != clickedObject) {
+                        this.arrowModels.forEach(arrow => {
+                            if (arrow != this.clickedObject) {
                                 arrow.children.forEach(c => c.material.emissive.setHex(this.colours.BRIGHTGREY))
                             }
                         })
 
-                        if (this.hoveredObject != clickedObject) {
+                        if (this.hoveredObject != this.clickedObject) {
                             this.hoveredObject.children.forEach(c => c.material.emissive.setHex(this.colours.YELLOW))
                         }
                     }
@@ -185,8 +221,8 @@ class VRGameBoard extends GameBoard {// eslint-disable-line
 
                 document.body.style.cursor = "default"
 
-                if (arrowModels) {
-                    arrowModels.forEach(arrow => {
+                if (this.arrowModels.length) {
+                    this.arrowModels.forEach(arrow => {
 
                         if (arrow != this.clickedObject) {
                             arrow.children.forEach(c => c.material.emissive.setHex(this.colours.BRIGHTGREY))

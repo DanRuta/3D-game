@@ -3,15 +3,8 @@
 let ws
 let roomNameValue
 
-let hoveredObject
-let clickedObject
-const mouseIsDown = false
 let rotation = 45
 
-const WHITE = 0xaaaaaa
-const YELLOW = 0xaaaa00
-const CYAN = 0x00aaaa
-const arrowModels = []
 const rotations = [
     {x: 0.25, y: 0.0, z: 0}, // left
     {x: 0.25, y: 0.50, z: 0}, // right
@@ -114,10 +107,8 @@ window.addEventListener("load", () => {
     // Controls
     let controls = new THREE.OrbitControls(camera, renderer.domElement)
     controls.target.set(
-        // camera.position.x+0.15,
         Math.cos(camera.position.x*Math.PI/180) * 4,
         camera.position.y,
-        // camera.position.z
         Math.sin(camera.position.z*Math.PI/180) * 4
     )
 
@@ -134,42 +125,12 @@ window.addEventListener("load", () => {
     window.addEventListener("deviceorientation", setOrientationControls)
 
 
-    const loader = new THREE.ObjectLoader()
+    // const loader = new THREE.ObjectLoader()
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
     const light = new THREE.DirectionalLight( 0xffffff, 0.5 )
     light.position.set( 0, 1, 0 ).normalize()
     scene.add(light)
-
-
-
-    // Add arrow models
-    for (let a=0; a<6; a++) {
-        loader.load("lib/arrow.json", model => {
-
-            model.position.x = positions[a].x * 2 * Math.PI
-            model.position.y = positions[a].y * 2 * Math.PI
-            model.position.z = positions[a].z * 2 * Math.PI
-
-            model.rotation.x = rotations[a].x * 2 * Math.PI
-            model.rotation.y = rotations[a].y * 2 * Math.PI
-            model.rotation.z = rotations[a].z * 2 * Math.PI
-
-            model.children.forEach(c => {
-                if (a==3) {
-                    c.material.emissive.setHex(CYAN)
-                    clickedObject = model
-                } else {
-                    c.material.emissive.setHex(WHITE)
-                }
-            })
-
-            arrowModels.push(model)
-            model.data = {arrowIndex: a}
-            scene.add(model)
-        })
-    }
-
 
     const resetGame = () => {
 
@@ -190,6 +151,7 @@ window.addEventListener("load", () => {
             renderer: renderer,
             boardElement: renderer.domElement
         })
+        game.board.makeArrows()
     }
     resetGame()
 
@@ -232,11 +194,8 @@ window.addEventListener("load", () => {
     })
 
     window.addEventListener("keydown", e => {
-        console.log("keydown", e)
         if (e.code == "Space") {
             game.board.toggleExploded()
         }
     })
-
-    console.log("hi")
 })

@@ -473,6 +473,19 @@ class GameBoard {// eslint-disable-line
         this.previewSphere.material.emissive.setHex(previewColour)
     }
 
+    highlightArrow (index) {
+        const arrowModel = arrowModels.filter(a => a.data.arrowIndex==index)
+
+        // Clear old arrow
+        if (clickedObject) {
+            clickedObject.children.forEach(c => c.material.emissive.setHex(this.colours.BRIGHTGREY))
+        }
+
+        // Set new one to cyan
+        arrowModel[0].children.forEach(c => c.material.emissive.setHex(this.colours.CYAN))
+        clickedObject = arrowModel[0]
+    }
+
     render (gameState) {
         this.resetBoard()
 
@@ -1019,6 +1032,7 @@ class VRGameBoard extends GameBoard {// eslint-disable-line
         super(game, true)
 
         this.arrowNames = ["left", "right", "up", "down", "forward", "backward"]
+        this.arrowModels = []
     }
 
     loadTHREEjsItems (items) {
@@ -1044,9 +1058,44 @@ class VRGameBoard extends GameBoard {// eslint-disable-line
         }, false)
     }
 
+    // Add arrow models
+    makeArrows () {
+
+        const loader = new THREE.ObjectLoader()
+
+        // Don't re-draw them
+        if (!this.arrowModels.length) {
+            for (let a=0; a<6; a++) {
+                loader.load("lib/arrow.json", model => {
+
+                    model.position.x = positions[a].x * 2 * Math.PI
+                    model.position.y = positions[a].y * 2 * Math.PI
+                    model.position.z = positions[a].z * 2 * Math.PI
+
+                    model.rotation.x = rotations[a].x * 2 * Math.PI
+                    model.rotation.y = rotations[a].y * 2 * Math.PI
+                    model.rotation.z = rotations[a].z * 2 * Math.PI
+
+                    model.children.forEach(c => {
+                        if (a==3) {
+                            c.material.emissive.setHex(this.colours.CYAN)
+                            this.clickedObject = model
+                        } else {
+                            c.material.emissive.setHex(this.colours.BRIGHTGREY)
+                        }
+                    })
+
+                    this.arrowModels.push(model)
+                    model.data = {arrowIndex: a}
+                    this.scene.add(model)
+                })
+            }
+        }
+    }
+
     highlightArrow (index) {
 
-        const arrowModel = arrowModels.filter(a => a.data.arrowIndex==index)
+        const arrowModel = this.arrowModels.filter(a => a.data.arrowIndex==index)
 
         // Clear old arrow
         if (this.clickedObject) {
@@ -1081,11 +1130,11 @@ class VRGameBoard extends GameBoard {// eslint-disable-line
 
                         this.highlightArrow(this.hoveredObject.data.arrowIndex)
 
-                        console.log("clicked", arrowNames[this.clickedObject.data.arrowIndex])
+                        console.log("clicked", this.arrowNames[this.clickedObject.data.arrowIndex])
 
                         if (ws) {
                             ws.send(JSON.stringify({
-                                direction: arrowNames[clickedObject.data.arrowIndex],
+                                direction: this.arrowNames[this.clickedObject.data.arrowIndex],
                                 userId: "1234",
                                 username: "rob",
                                 type: "text",
@@ -1093,18 +1142,18 @@ class VRGameBoard extends GameBoard {// eslint-disable-line
                                 type: "gravity"
                             }))
                         } else {
-                            this.game.shiftGravity(arrowNames[clickedObject.data.arrowIndex])
+                            this.game.shiftGravity(this.arrowNames[this.clickedObject.data.arrowIndex])
                         }
 
                     } else {
                         // Hovering over non clicked item without the mouse down
-                        arrowModels.forEach(arrow => {
-                            if (arrow != clickedObject) {
+                        this.arrowModels.forEach(arrow => {
+                            if (arrow != this.clickedObject) {
                                 arrow.children.forEach(c => c.material.emissive.setHex(this.colours.BRIGHTGREY))
                             }
                         })
 
-                        if (this.hoveredObject != clickedObject) {
+                        if (this.hoveredObject != this.clickedObject) {
                             this.hoveredObject.children.forEach(c => c.material.emissive.setHex(this.colours.YELLOW))
                         }
                     }
@@ -1198,8 +1247,8 @@ class VRGameBoard extends GameBoard {// eslint-disable-line
 
                 document.body.style.cursor = "default"
 
-                if (arrowModels) {
-                    arrowModels.forEach(arrow => {
+                if (this.arrowModels.length) {
+                    this.arrowModels.forEach(arrow => {
 
                         if (arrow != this.clickedObject) {
                             arrow.children.forEach(c => c.material.emissive.setHex(this.colours.BRIGHTGREY))
@@ -1242,15 +1291,8 @@ class VRGameBoard extends GameBoard {// eslint-disable-line
 let ws
 let roomNameValue
 
-let hoveredObject
-let clickedObject
-const mouseIsDown = false
 let rotation = 45
 
-const WHITE = 0xaaaaaa
-const YELLOW = 0xaaaa00
-const CYAN = 0x00aaaa
-const arrowModels = []
 const rotations = [
     {x: 0.25, y: 0.0, z: 0}, // left
     {x: 0.25, y: 0.50, z: 0}, // right
@@ -1353,10 +1395,8 @@ window.addEventListener("load", () => {
     // Controls
     let controls = new THREE.OrbitControls(camera, renderer.domElement)
     controls.target.set(
-        // camera.position.x+0.15,
         Math.cos(camera.position.x*Math.PI/180) * 4,
         camera.position.y,
-        // camera.position.z
         Math.sin(camera.position.z*Math.PI/180) * 4
     )
 
@@ -1373,42 +1413,12 @@ window.addEventListener("load", () => {
     window.addEventListener("deviceorientation", setOrientationControls)
 
 
-    const loader = new THREE.ObjectLoader()
+    // const loader = new THREE.ObjectLoader()
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
     const light = new THREE.DirectionalLight( 0xffffff, 0.5 )
     light.position.set( 0, 1, 0 ).normalize()
     scene.add(light)
-
-
-
-    // Add arrow models
-    for (let a=0; a<6; a++) {
-        loader.load("lib/arrow.json", model => {
-
-            model.position.x = positions[a].x * 2 * Math.PI
-            model.position.y = positions[a].y * 2 * Math.PI
-            model.position.z = positions[a].z * 2 * Math.PI
-
-            model.rotation.x = rotations[a].x * 2 * Math.PI
-            model.rotation.y = rotations[a].y * 2 * Math.PI
-            model.rotation.z = rotations[a].z * 2 * Math.PI
-
-            model.children.forEach(c => {
-                if (a==3) {
-                    c.material.emissive.setHex(CYAN)
-                    clickedObject = model
-                } else {
-                    c.material.emissive.setHex(WHITE)
-                }
-            })
-
-            arrowModels.push(model)
-            model.data = {arrowIndex: a}
-            scene.add(model)
-        })
-    }
-
 
     const resetGame = () => {
 
@@ -1429,6 +1439,7 @@ window.addEventListener("load", () => {
             renderer: renderer,
             boardElement: renderer.domElement
         })
+        game.board.makeArrows()
     }
     resetGame()
 
@@ -1471,12 +1482,9 @@ window.addEventListener("load", () => {
     })
 
     window.addEventListener("keydown", e => {
-        console.log("keydown", e)
         if (e.code == "Space") {
             game.board.toggleExploded()
         }
     })
-
-    console.log("hi")
 })
 //# sourceMappingURL=scriptVR.concat.js.map

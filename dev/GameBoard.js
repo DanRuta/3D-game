@@ -473,6 +473,19 @@ class GameBoard {// eslint-disable-line
         this.previewSphere.material.emissive.setHex(previewColour)
     }
 
+    highlightArrow (index) {
+        const arrowModel = arrowModels.filter(a => a.data.arrowIndex==index)
+
+        // Clear old arrow
+        if (clickedObject) {
+            clickedObject.children.forEach(c => c.material.emissive.setHex(this.colours.BRIGHTGREY))
+        }
+
+        // Set new one to cyan
+        arrowModel[0].children.forEach(c => c.material.emissive.setHex(this.colours.CYAN))
+        clickedObject = arrowModel[0]
+    }
+
     render (gameState) {
         this.resetBoard()
 
