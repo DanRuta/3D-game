@@ -711,6 +711,7 @@ class GameLogic {// eslint-disable-line
             this.players[p].reward(1, this.gameState)
             this.players.forEach((player, pi) => pi!=p && player.reward(-1, this.gameState))
             // winsDisplay.style.display = "inline-block"
+            window.dispatchEvent(new CustomEvent("T^3Win", {detail: p}))
             return
         }
 
@@ -718,6 +719,7 @@ class GameLogic {// eslint-disable-line
         if (this.isFull()) {
             console.log("Tied game")
             this.players.forEach(player => player.reward(0.25, this.gameState))
+            window.dispatchEvent(new CustomEvent("T^3Tie", {detail: p}))
             return
         }
 

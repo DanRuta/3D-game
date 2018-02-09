@@ -256,6 +256,9 @@ window.addEventListener("load", () => {
         game.trainAI({epochs: 600, epsilon: 0.5})
     }
 
+    window.addEventListener("T^3Win", ({detail}) => console.log(`Player ${detail} wins`))
+    window.addEventListener("T^3Tie", ({detail}) => console.log(`Tied by player ${detail}`))
+
 })
 
 function connectWebSockets(roomName) {
