@@ -63,7 +63,7 @@ window.addEventListener("load", () => {
     })
 
     let effect = new THREE.VREffect(renderer)
-    effect.separation = 0
+    effect.separation = -10
     effect.setSize(window.innerWidth, window.innerHeight)
 
     let vrDisplay
@@ -74,7 +74,6 @@ window.addEventListener("load", () => {
 
     // Button to enable VR mode
     enterVRButton.addEventListener("click", () => {
-        const controls = document.getElementById("controls")
 
         // Go back to non VR mode
         if (enterVRButton.classList.contains("small")) {
@@ -115,6 +114,8 @@ window.addEventListener("load", () => {
         camera.position.y,
         Math.sin(camera.position.z*Math.PI/180) * 4
     )
+    controls.enablePan = false
+    controls.enableZoom = false
 
     // Set VR controls if available
     const setOrientationControls = event => {
@@ -129,7 +130,6 @@ window.addEventListener("load", () => {
     window.addEventListener("deviceorientation", setOrientationControls)
 
 
-    // const loader = new THREE.ObjectLoader()
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
     const light = new THREE.DirectionalLight( 0xffffff, 0.5 )
@@ -366,4 +366,15 @@ window.addEventListener("load", () => {
         moveCursor(lastX, lastY)
     }
 
+    // TEMP
+    if (getParameters().t == "y") {
+        readCircle()
+    }
+
+    // Resize the rendered element on window resize
+    window.addEventListener("resize", () => {
+        effect.setSize(window.innerWidth, window.innerHeight)
+        camera.aspect = window.innerWidth / window.innerHeight
+        camera.updateProjectionMatrix()
+    })
 })

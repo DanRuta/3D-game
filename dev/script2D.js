@@ -232,10 +232,8 @@ window.addEventListener("load", () => {
         })
 
         window.addEventListener("wheel", ({deltaY}) => {
-            // isRotating = true
             game.board.rotationValue += (deltaY > 0 ? 1 : -1) * 5
             game.board.rotate()
-            // isRotating = false
 
             rotation = (rotation + (deltaY > 0 ? 1 : -1) * 5) % 360
             setRotation(rotation)
@@ -247,19 +245,21 @@ window.addEventListener("load", () => {
                 game.board.toggleExploded()
             }
         })
+
+        // Resize the rendered element on window resize
+        window.addEventListener("resize", () => {
+            game.board.renderer.setSize(window.innerWidth-100, window.innerHeight-200)
+            game.board.camera.aspect = window.innerWidth / window.innerHeight
+            game.board.camera.updateProjectionMatrix()
+        })
     }
     initArrows()
 
-
-    window.trainAI = () => {
-        game.gravityEnabled = false
-        game.trainAI({epochs: 600, epsilon: 0.5})
-    }
-
     window.addEventListener("T^3Win", ({detail}) => console.log(`Player ${detail} wins`))
     window.addEventListener("T^3Tie", ({detail}) => console.log(`Tied by player ${detail}`))
-
 })
+
+
 
 function connectWebSockets(roomName) {
     ws =  new WebSocket("ws://vrscrible.localhost:8001/" + roomName)
