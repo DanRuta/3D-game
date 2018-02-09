@@ -711,6 +711,7 @@ class GameLogic {// eslint-disable-line
             this.players[p].reward(1, this.gameState)
             this.players.forEach((player, pi) => pi!=p && player.reward(-1, this.gameState))
             // winsDisplay.style.display = "inline-block"
+            window.dispatchEvent(new CustomEvent("T^3Win", {detail: p}))
             return
         }
 
@@ -718,6 +719,7 @@ class GameLogic {// eslint-disable-line
         if (this.isFull()) {
             console.log("Tied game")
             this.players.forEach(player => player.reward(0.25, this.gameState))
+            window.dispatchEvent(new CustomEvent("T^3Tie", {detail: p}))
             return
         }
 
@@ -1364,13 +1366,16 @@ window.addEventListener("load", () => {
     enterVRButton.addEventListener("click", () => {
         const controls = document.getElementById("controls")
 
+        // Go back to non VR mode
         if (enterVRButton.classList.contains("small")) {
             effect = new THREE.VREffect(renderer)
             effect.separation = 0
             effect.setSize(window.innerWidth, window.innerHeight)
 
             enterVRButton.classList.remove("small")
+            game.board.usingVR = false
         } else {
+            // Start VR mode
             if (navigator.userAgent.includes("Mobile VR")) {
                 vrDisplay.requestPresent([{source: renderer.domElement}])
             } else {
@@ -1378,6 +1383,7 @@ window.addEventListener("load", () => {
                 effect.separation = 0
                 effect.setSize(window.innerWidth, window.innerHeight)
             }
+            game.board.usingVR = true
 
             enterVRButton.classList.add("small")
         }
@@ -1486,5 +1492,169 @@ window.addEventListener("load", () => {
             game.board.toggleExploded()
         }
     })
+
+
+    /* MOTION CONTROLLER*/
+    let getVideoFeedAttempts = 0
+
+    const getVideoFeed = () => {
+        try {
+            if ("mozGetUserMedia" in navigator) {
+                navigator.mozGetUserMedia(
+                    {video: { facingMode: "environment" }},
+                    stream => {
+                        video.src = window.URL.createObjectURL(stream)
+                    },
+                    err => {
+                        console.log(err)
+                        alert("There was an error accessing the camera. Please try again and ensure you are using https")
+                    }
+                )
+            } else {
+                const mediaDevicesSupport = navigator.mediaDevices && navigator.mediaDevices.getUserMedia
+
+                if (mediaDevicesSupport) {
+                    navigator.mediaDevices
+                    .getUserMedia({ video: { facingMode: "environment" } })
+                    .then(stream => {
+                        video.src = window.URL.createObjectURL(stream)
+                    })
+                    .catch(err => {
+                        console.log(err)
+                        getVideoFeedAttempts++
+
+                        // Sometimes, getting the camera can fail. Re-attempting usually works, on refresh. This simulates that.
+                        if (getVideoFeedAttempts<3) {
+                            getVideoFeed()
+                        } else {
+                            alert("There was an error accessing the camera. Please try again and ensure you are using https")
+                        }
+                    })
+                } else {
+                    const getUserMedia =
+                        navigator.getUserMedia ||
+                        navigator.webkitGetUserMedia ||
+                        navigator.mozGetUserMedia ||
+                        navigator.msGetUserMedia
+
+                    if (getUserMedia) {
+                        getUserMedia(
+                            { video: { facingMode: "environment" } },
+                            stream => {
+                                video.src = window.URL.createObjectURL(stream)
+                            },
+                            err => {
+                                console.log(err)
+                                alert("There was an error accessing the camera. Please try again and ensure you are using https.")
+                            }
+                        )
+                    } else {
+                        alert("Camera not available")
+                    }
+                }
+            }
+
+        } catch (e) {
+            alert("Error getting camera feed. Please ensure you are using https.")
+        }
+    }
+
+    window.video = document.createElement("video")
+    video.autoplay = true
+    video.width = window.innerWidth
+    video.height = window.innerHeight / 2
+    getVideoFeed()
+
+    const buffer = document.createElement("canvas")
+    buffer.width = video.width
+    buffer.height = video.height
+    const bufferC = buffer.getContext("2d")
+
+    let lastX = 0
+    let lastY = 0
+
+    let newX = 0
+    let newY = 0
+
+    const bounds = 100
+    let foundWithinBounds = false
+
+    let frameCounter = -1
+
+    const moveCursor = (x, y) => {
+
+        // console.log(x, y)
+        tempCursor.style.marginTop = parseInt(y/video.height * window.innerHeight)+"px"
+        let leftM = parseInt(x/video.width * window.innerWidth)
+
+        if (game.board.usingVR) {
+            leftM = leftM / 2
+        }
+
+        tempCursor.style.marginLeft = leftM+"px"
+
+        game.board.mouse.x = x / video.width * 2 - 1
+        game.board.mouse.y = (y / video.height * 2 - 1) * -1
+    }
+
+    window.readCircle = () => {
+
+        requestAnimationFrame(readCircle)
+
+        // Only read a new position every 10 frames
+        if (++frameCounter%5==0) {
+
+            bufferC.drawImage(video, 0, 0, video.width, video.height)
+            const data = bufferC.getImageData(0, 0, video.width, video.height).data
+
+            let avgX = 0
+            let avgY = 0
+            let counter = 0
+
+            let startR = 0
+            let startC = 0
+            let endR = video.height
+            let endC = video.width
+
+            // Limit the search area when the position can be roughly estimated from the previous frame
+            if (foundWithinBounds) {
+                startR = parseInt(Math.max(lastY - bounds, 0))
+                startC = parseInt(Math.max(lastX - bounds, 0))
+                endR = parseInt(Math.min(lastY + bounds, video.width))
+                endC = parseInt(Math.min(lastX + bounds, video.height))
+            }
+
+            // For every 4th row
+            for (let r=startR; r<endR; r+=4) {
+                // For every 4th column
+                for (let c=startC; c<endC; c+=4) {
+
+                    // Pixel coords
+                    const p = r*video.width + c
+                    const pixel = [data[p*4]/255, data[p*4+1]/255, data[p*4+2]/255]
+
+                    if (pixel[0]<=0.75 && pixel[1] >= 0.75 && pixel[2]<=0.7) {
+                        counter++
+                        avgX += c
+                        avgY += r
+                    }
+                }
+            }
+
+            if (counter>10) {
+                newX = avgX / counter
+                newY = avgY / counter
+                foundWithinBounds = true
+            } else {
+                foundWithinBounds = false
+            }
+        }
+
+        lastX += (newX-lastX)/20
+        lastY += (newY-lastY)/20
+
+        moveCursor(lastX, lastY)
+    }
+
 })
 //# sourceMappingURL=scriptVR.concat.js.map

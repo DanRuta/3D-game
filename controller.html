@@ -222,10 +222,12 @@ eventArea.addEventListener("pointerleave", pointerUp)
 
 
 eventArea.addEventListener("click", () => {
-    document.fullscreenEnabled && eventArea.requestFullScreen() ||
-    document.webkitFullscreenEnabled && eventArea.webkitRequestFullScreen() ||
-    document.mozFullScreenEnabled && eventArea.mozRequestFullScreen() ||
-    document.msFullScreenEnabled && eventArea.msRequestFullScreen()
+    if (!window.location.href.includes("localhost")) {
+        document.fullscreenEnabled && eventArea.requestFullScreen() ||
+        document.webkitFullscreenEnabled && eventArea.webkitRequestFullScreen() ||
+        document.mozFullScreenEnabled && eventArea.mozRequestFullScreen() ||
+        document.msFullScreenEnabled && eventArea.msRequestFullScreen()
+    }
 })
 
 </script>
