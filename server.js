@@ -20,7 +20,7 @@ const getHandlers = []
 const postHandlers= []
 const WebSocketHandlers = {}
 
-const PORTS = {http: 1337, https: 443, ws: 8000}
+const PORTS = {http: 1337, https: 443, ws: 8001}
 
 if (DEVMODE) {
     console.log("Dev mode")
