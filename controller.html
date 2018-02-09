@@ -1,37 +1,234 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title></title>
-</head>
-<body>
 
 <style>
     body {
         display: flex;
         justify-content: center;
-        background-color: black;
+        background-color: black !important;
+        margin: 0;
+        height: 100vh;
+        width: 100vw;
+        touch-action: none;
     }
-    div {
+    #circle {
+        display: none;
         height: 50vw;
         width: 50vw;
+        pointer-events: none;
         background-color: #00ff00;
         border-radius: 50%;
         box-shadow: 0 0 1000px 100px #00ff00;
     }
+    #debug {
+        display: none;
+        position: absolute;
+        pointer-events: none;
+        font-size: 67px;
+        color: blue;
+    }
+    #eventArea {
+        height: 100vh;
+        width: 100vw;
+        position: absolute;
+    }
 </style>
+<div id="circle"></div>
+<div id="debug">_9</div>
+<div id="eventArea">
+
 <script>
 "use strict"
-window.addEventListener("load", () => {
-    circle.addEventListener("click", () => {
-        document.fullscreenEnabled && circle.requestFullScreen() ||
-        document.webkitFullscreenEnabled && circle.webkitRequestFullScreen() ||
-        document.mozFullScreenEnabled && circle.mozRequestFullScreen() ||
-        document.msFullScreenEnabled && circle.msRequestFullScreen()
-    })
+
+// Tap and hold
+let tapHoldTimer
+
+const sendData = data => {
+    console.log(data)
+    debug.innerHTML = data
+}
+
+const onHold = () => {
+
+    if (swipeCounter>0 || pinchCounter>0) return
+
+    console.log("tap and hold")
+    circle.style.display = "block"
+    sendData("hold")
+}
+
+// Double tap
+let doubleTapTimeout
+let lastTap = 0
+
+// Swipe
+let touchstartX = 0
+let touchstartY = 0
+let touchendX = 0
+let swipeCounter = 0
+let pinchCounter = 0
+
+const touchStartEvent = e => {
+    e.preventDefault()
+
+    if (!tapHoldTimer) {
+        tapHoldTimer = setTimeout(onHold, 150)
+    }
+    touchstartX = e.changedTouches[0].screenX
+    touchstartY = e.changedTouches[0].screenY
+}
+
+
+const touchEndEvent = e => {
+    e.preventDefault()
+
+    circle.style.display = "none"
+    swipeCounter--
+
+    if (pinchCounter>0) {
+        pinchCounter--
+        clearTimeout(tapHoldTimer)
+        tapHoldTimer = undefined
+        return
+    }
+
+    if (tapHoldTimer) {
+        clearTimeout(tapHoldTimer)
+        tapHoldTimer = undefined
+    }
+
+    const currTime = new Date().getTime()
+    const tapLength = currTime - lastTap
+    lastTap = currTime
+
+    if (doubleTapTimeout) {
+        clearTimeout(doubleTapTimeout)
+        tapHoldTimer = undefined
+    }
+
+
+    if (pinchCounter <= 0 && swipeCounter <= 0 && tapLength < 500 && tapLength > 0) {
+        console.log("double tap")
+        // debug.innerHTML = "double tap"
+        sendData("double")
+        clearTimeout(tapHoldTimer)
+        tapHoldTimer = undefined
+        event.preventDefault()
+        return
+    } else {
+        console.log("single tap", tapLength)
+        clearTimeout(tapHoldTimer)
+        tapHoldTimer = undefined
+        doubleTapTimeout = setTimeout(() => clearTimeout(doubleTapTimeout), 500)
+    }
+
+
+    touchendX = e.changedTouches[0].screenX
+
+    if (touchendX < (touchstartX-25)) {
+        console.log("swiped left")
+        clearTimeout(tapHoldTimer)
+        tapHoldTimer = undefined
+        // debug.innerHTML = "swiped left"
+        sendData("left")
+        swipeCounter = 2
+    }
+
+    if (touchendX > (touchstartX+25)) {
+        console.log("swiped right")
+        clearTimeout(tapHoldTimer)
+        tapHoldTimer = undefined
+        // debug.innerHTML = "swiped right"
+        sendData("right")
+        swipeCounter = 2
+    }
+}
+
+eventArea.addEventListener("touchstart", touchStartEvent)
+eventArea.addEventListener("mousedown", touchStartEvent)
+
+eventArea.addEventListener("touchend", touchEndEvent)
+eventArea.addEventListener("mouseup", touchEndEvent)
+
+// Pinch
+let previousDiff = -1
+const events = []
+
+const poninterDown = e => {
+    events.push(e)
+}
+
+const pointerMove = e => {
+
+    // Update the pointer event
+    for (let pi=0; pi<events.length; pi++) {
+        if (events[pi].pointerId == e.pointerId) {
+            events[pi] = e
+            break
+        }
+    }
+
+    // Calculate new diff
+    if (events.length == 2) {
+
+        const diffX = Math.abs(events[0].clientX - events[1].clientX)
+        // const diffY = Math.abs(events[0].clientY - events[1].clientY)
+        // const diff = Math.max(diffX, diffY)
+        const diff = diffX
+
+        if (previousDiff > 0) {
+            if (diff > previousDiff) {
+                console.log("pinch out")
+                // debug.innerHTML = "pinch out"
+                sendData("out")
+                pinchCounter = 2
+                clearTimeout(tapHoldTimer)
+                tapHoldTimer = undefined
+            }
+
+            if (diff < previousDiff) {
+                console.log("pinch in")
+                pinchCounter = 2
+                clearTimeout(tapHoldTimer)
+                tapHoldTimer = undefined
+                // debug.innerHTML = "pinch in"
+                sendData("in")
+            }
+        }
+
+        previousDiff = diff
+    }
+
+}
+
+const pointerUp = e => {
+    // Remove the event
+    for (let pi=0; pi<events.length; pi++) {
+        if (events[pi].pointerId==e.pointerId) {
+            events.splice(pi, 1)
+            break
+        }
+    }
+
+    if (events.length < 2) {
+        previousDiff = -1
+    }
+}
+
+eventArea.addEventListener("pointerdown", poninterDown)
+eventArea.addEventListener("pointermove", pointerMove)
+eventArea.addEventListener("pointerup", pointerUp)
+eventArea.addEventListener("pointercancel", pointerUp)
+eventArea.addEventListener("pointerout", pointerUp)
+eventArea.addEventListener("pointerleave", pointerUp)
+
+
+eventArea.addEventListener("click", () => {
+    document.fullscreenEnabled && eventArea.requestFullScreen() ||
+    document.webkitFullscreenEnabled && eventArea.webkitRequestFullScreen() ||
+    document.mozFullScreenEnabled && eventArea.mozRequestFullScreen() ||
+    document.msFullScreenEnabled && eventArea.msRequestFullScreen()
 })
 
 </script>
-<div id="circle"></div>
 
-</body>
-</html>
+
+
