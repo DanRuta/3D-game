@@ -199,8 +199,8 @@ const wsServers = [new WebSocket({port: PORTS.ws})]
 // Start HTTPs server if not in dev mode
 if (!DEVMODE) {
     httpsServer = https.createServer({
-        key : fs.readFileSync("/etc/letsencrypt/keys/0012_key-certbot.pem"),
-        cert: fs.readFileSync("/etc/letsencrypt/live/danruta.co.uk-0003/fullchain.pem")
+        key : fs.readFileSync("/etc/letsencrypt/keys/0004_key-certbot.pem"),
+        cert: fs.readFileSync("/etc/letsencrypt/live/danruta.co.uk-0004/fullchain.pem")
     }, handleRequests).listen(PORTS.https, () =>  console.log(`HTTPs - Port: ${PORTS.https}`))
 
     wsServers.push(new WebSocket({server: httpsServer}))
