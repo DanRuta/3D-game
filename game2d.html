@@ -67,39 +67,8 @@
                                 Players In Room
                             </h3>
 
-                            <ul class="panel-player-list list-unstyled">
-                                <li class="player">
-                                    <ul class="list-unstlyed">
-                                        <li class="player-colour" data-colour="red">red</li>
-                                        <!-- /.player-colour -->
-                                        <li class="player-name">Ben Campbell:</li>
-                                        <!-- /.player-name -->
-                                        <li class="player-score">2</li>
-                                        <!-- /.player-score -->
-                                    </ul>
-                                </li>
-                                <!-- /.player -->
-                                <li class="player">
-                                    <ul class="list-unstlyed">
-                                        <li class="player-colour" data-colour="blue">blue</li>
-                                        <!-- /.player-colour -->
-                                        <li class="player-name">Dan Ruta:</li>
-                                        <!-- /.player-name -->
-                                        <li class="player-score">2</li>
-                                        <!-- /.player-score -->
-                                    </ul>
-                                </li>
-                                <!-- /.player -->
-                                <li class="player">
-                                    <ul class="list-unstlyed">
-                                        <li class="player-colour" data-colour="green">green</li>
-                                        <!-- /.player-colour -->
-                                        <li class="player-name">Best Rob:</li>
-                                        <!-- /.player-name -->
-                                        <li class="player-score">2</li>
-                                        <!-- /.player-score -->
-                                    </ul>
-                                </li>
+                            <ul class="panel-player-list list-unstyled" id="playersInGame">
+
                                 <!-- /.player -->
                             </ul>
                             <!-- /.panel-player-list -->
@@ -125,17 +94,17 @@
 
                             <div class="side-panel top-panel p-4">
 
-                                <div class="d-flex justify-content-between">
+                                <div id="turnPanel" class="d-flex justify-content-between">
                                     <div class="panel-content mb-0">
-                                        Current Turn: Best Rob
+                                        Current Turn: <label id="currentTurn"> </label>
                                     </div>
                                     <div class="panel-content mb-0">
-                                        Next Turn: Dan Ruta
+                                        Next Turn: <label  id="nextTurn"> </label>
                                     </div>
                                     <!-- /.panel-content -->
                                 </div>
                                 <!-- /.d-flex justify-content between -->
-
+                                <div id="winPanel" style="display:none;"> </div>
                             </div>
 
                         </div>

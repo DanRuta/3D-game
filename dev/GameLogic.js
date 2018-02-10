@@ -40,9 +40,9 @@ class GameLogic {// eslint-disable-line
 
         // Set the first player to either AI or human (aka the actual player)
         if (this.aiOpponent) {
-            this.players.push(new GamePlayer("AI", 0, this))
+            this.players.push(new GamePlayer("AI", 0, this, "AI"))
         } else {
-            this.players.push(new GamePlayer("local human", 0))
+            this.players.push(new GamePlayer("local human", 0, undefined ,"Player 1"))
         }
 
         // Set the rest to whatever was configured
@@ -52,9 +52,9 @@ class GameLogic {// eslint-disable-line
             if (this.isTraining) {
                 this.players.push(new GamePlayer("AI", p, this))
             } else if (isMultiplayer) {
-                this.players.push(new GamePlayer("remote human", p))
+                this.players.push(new GamePlayer("remote human", p, undefined, `Player ${p +1}`))
             } else {
-                this.players.push(new GamePlayer("local human", p))
+                this.players.push(new GamePlayer("local human", p, undefined, `Player ${p + 1}`))
             }
         }
 

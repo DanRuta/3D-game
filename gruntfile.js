@@ -2,7 +2,7 @@ module.exports = function(grunt){
     grunt.initConfig({
         eslint: {
             options: {
-              fix: false
+              fix: true
             },
             src: ["./dev/*.js", "game.js"]
         },

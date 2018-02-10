@@ -49,6 +49,8 @@ window.addEventListener("load", () => {
             connectWebSockets(roomNameValue)
             roomNameTitle.innerText = roomNameValue
         }
+        setPlayerLabels()
+        setupPlayersTags()
     })
     resetButton.click()
 
@@ -255,11 +257,24 @@ window.addEventListener("load", () => {
     }
     initArrows()
 
-    window.addEventListener("T^3Win", ({detail}) => console.log(`Player ${detail} wins`))
-    window.addEventListener("T^3Tie", ({detail}) => console.log(`Tied by player ${detail}`))
+    window.addEventListener("T^3Win", winnerWinnerChickenDinner)
+    window.addEventListener("T^3Tie", noChickenDinner)
 })
 
-
+function  winnerWinnerChickenDinner(e) {
+    turnPanel.classList.remove("d-flex")
+    turnPanel.style.display = "none"
+    winPanel.style.display = "block"
+    winPanel.innerText = game.players[e.detail].name + " Winns!"
+  
+}
+function  noChickenDinner(e) {
+    turnPanel.classList.remove("d-flex")
+    turnPanel.style.display = "none"
+    winPanel.style.display = "block"
+    winPanel.innerText = game.players[e.detail].name + " Caused a tie!"
+  
+}
 
 function connectWebSockets(roomName) {
     ws =  new WebSocket("ws://vrscrible.localhost:8001/" + roomName)
@@ -308,6 +323,7 @@ function sendMove(playerIndex, b, r, c, gameState) {
             gameState: gameState
         }))
     }
+    setPlayerLabels()
 }
 
 function sendState(gameState) {
@@ -339,7 +355,33 @@ function getGameState(roomName) {
     .then(data => {
         if (data.gameState !== null){
             game.board.render(data.gameState)
+            game.gameState  = data.gameState
         }
     })
 
+}
+
+function setPlayerLabels(){
+    currentTurn.innerText =  game.players[game.playerIndex].name 
+    const nextPlayer = game.playerIndex == game.players.length -  1 ? 0 : game.playerIndex + 1
+    nextTurn.innerText = game.players[nextPlayer].name
+}
+
+function setupPlayersTags() {
+    let htmlToPut = ""
+    game.players.forEach(player =>{
+        htmlToPut += `
+                              <!-- /.player -->
+                                <li class="player">
+                                    <ul class="list-unstlyed">
+                                        <li class="player-colour" data-colour="green">${game.board.playerColours[player.playerIndex].toUpperCase()}</li>
+                                        <!-- /.player-colour -->
+                                        <li class="player-name">${player.name}:</li>
+                                        <!-- /.player-name -->
+                                        <li class="player-score"></li>
+                                        <!-- /.player-score -->
+                                    </ul>
+                                </li> `
+    })
+    playersInGame.innerHTML = htmlToPut
 }

@@ -2,13 +2,14 @@
 
 class GamePlayer {// eslint-disable-line
 
-    constructor (type, playerIndex, game) {
+    constructor (type, playerIndex, game, name) {
 
         console.log(`new ${type} player: ${playerIndex}`)
 
         this.type = type
         this.game = game // Two way binding
         this.playerIndex = playerIndex
+        this.name = name
     }
 
     clearLastState () {

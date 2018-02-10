@@ -156,6 +156,12 @@ window.addEventListener("load", () => {
             boardElement: renderer.domElement
         })
         game.board.makeArrows()
+        roomNameValue = getURLParameter("roomName")
+
+        if (roomNameValue !== "") {
+            connectWebSockets(roomNameValue)
+            //roomNameTitle.innerText = roomNameValue
+        }
     }
     resetGame()
 
@@ -377,4 +383,106 @@ window.addEventListener("load", () => {
         camera.aspect = window.innerWidth / window.innerHeight
         camera.updateProjectionMatrix()
     })
+  
+    window.addEventListener("T^3Win", winnerWinnerChickenDinner)
+    window.addEventListener("T^3Tie", noChickenDinner)
 })
+
+
+function  winnerWinnerChickenDinner(e) {
+    winPanel.style.display = "block"
+    winPanel.style.textAlign = "center"
+    winPanel.innerText = game.players[e.detail].name + " Winns!"
+  
+}
+function  noChickenDinner(e) {
+    winPanel.style.display = "block"
+    winPanel.style.textAlign = "center"
+    winPanel.innerText = game.players[e.detail].name + " Caused a tie!"
+  
+}
+
+function connectWebSockets(roomName) {
+    ws =  new WebSocket("ws://vrscrible.localhost:8001/" + roomName)
+
+    ws.addEventListener("message", (message) => {
+        const data = JSON.parse(message.data)
+        console.log(data)
+
+        if (data.type === "gravity") {
+            game.shiftGravity(data.direction)
+
+        } else if (data.type === "move") {
+
+            const player = data.playerIndex
+            const {b, r, c} = data
+            console.log(player, b, r, c)
+            game.makeMove(player, b, r, c)
+        }
+    })
+
+    ws.addEventListener("open", () => {
+        console.log("connect ws")
+        console.log(roomName)
+        ws.send(JSON.stringify({userId: "1234", username: "rob", type: "setUp", room: roomName }))
+
+        getGameState(roomName)
+    })
+}
+
+function getURLParameter(name) {
+    // https://stackoverflow.com/questions/11582512/how-to-get-url-parameters-with-javascript
+    return decodeURIComponent((new RegExp("[?|&]" + name + "=" + "([^&;]+?)(&|#|;|$)").exec(location.search) || [null, ""])[1].replace(/\+/g, "%20")) || null
+}
+
+function sendMove(playerIndex, b, r, c, gameState) {
+    if (ws){
+        ws.send(JSON.stringify({
+            playerIndex: playerIndex,
+            b: b,
+            r: r,
+            c: c,
+            userId: "1234",
+            username: "rob",
+            room: roomNameValue,
+            type: "move",
+            gameState: gameState
+        }))
+    }
+    //setPlayerLabels()
+}
+
+function sendState(gameState) {
+    if (ws){
+        ws.send(JSON.stringify({
+            room: roomNameValue,
+            type: "state",
+            gameState: gameState
+        }))
+    }
+}
+
+function saveGameState(roomName, gameState) {
+    fetch("./saveGameState", {
+        method: "post",
+        body: JSON.stringify({roomName: roomName, gameState: gameState})
+    })
+}
+
+function getGameState(roomName) {
+
+    fetch("./getGameState?roomName=" + roomName, {
+        method: "get",
+        headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        }
+    }).then(res => res.json())
+    .then(data => {
+        if (data.gameState !== null){
+            game.board.render(data.gameState)
+            game.gameState  = data.gameState
+        }
+    })
+
+}
