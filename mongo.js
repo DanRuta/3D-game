@@ -160,11 +160,11 @@ module.exports.getUser = async(id) => {
   return result
 };
 
-module.exports.createUser = async(data) => {
+module.exports.createUser = async(gName, gEmail) => {
   const db = await connectDB()
 
   const user = db.collection("user")
-  let result = await user.insert([data])
+  let result = await user.insert({name: gName, email: gEmail})
 
   return result
 };
