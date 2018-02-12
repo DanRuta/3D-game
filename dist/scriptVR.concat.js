@@ -1069,7 +1069,7 @@ class VRGameBoard extends GameBoard {// eslint-disable-line
         // Don't re-draw them
         if (!this.arrowModels.length) {
             for (let a=0; a<6; a++) {
-                loader.load("lib/arrow.json", model => {
+                loader.load("arrows", model => {
 
                     model.position.x = positions[a].x * 2 * Math.PI
                     model.position.y = positions[a].y * 2 * Math.PI

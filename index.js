@@ -55,6 +55,10 @@ const getGameState = async (request, response) => {
     sendData({request, response, code: 200, data: dataToSend, contentType: "application/json"})
 }
 
+const returnArrow = async (request, response) => {
+    sendData({request, response, code: 200, data: fs.readFileSync(`${serverPath}lib/arrow.json`, "utf8"), contentType: "text/html"})
+}
+
 
 // POST
 // ====
@@ -270,7 +274,8 @@ exports.initProject = ({sendDataCallback}) => {
         get: {
             [/$/] : index,
             [/game$/] : sendGame2D,
-            [/getGameState/] : getGameState
+            [/getGameState/] : getGameState,
+            [/arrows$/] : returnArrow
         },
         post: {
             [/getAIMove/] : getAIMove,
