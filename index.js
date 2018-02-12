@@ -7,10 +7,18 @@ const fetch = require("node-fetch")
 const url = require("url")
 const db = require("./mongo")
 
+// Need this for prod server, where the path needs to be prefixed with the project folder
+let serverPath = ""
+
 try {
-    keys = JSON.parse(fs.readFileSync("./keys.json"))
+    keys = JSON.parse(fs.readFileSync("keys.json"))
 } catch (e) {
-    console.log("Could not parse keys. Did you remember to add the keys.json file?\n\n", e)
+    try {
+        keys = JSON.parse(fs.readFileSync("./t3/keys.json"))
+        serverPath = "t3/"
+    } catch (e) {
+        console.log("Could not parse keys. Did you remember to add the keys.json file?\n\n", e)
+    }
 }
 const googleClientId = process.argv.includes("dev") ? keys.dev : keys.dist
 
@@ -19,7 +27,7 @@ let rooms = []
 // GET
 // ===
 const index = (request, response) => {
-    sendData({request, response, code: 200, data: fs.readFileSync("index.html", "utf8"), contentType: "text/html"})
+    sendData({request, response, code: 200, data: fs.readFileSync(`./${serverPath}index.html`, "utf8"), contentType: "text/html"})
 }
 
 const sendGame2D = async (request, response) => {
@@ -33,7 +41,7 @@ const sendGame2D = async (request, response) => {
             await db.createRoom(roomName)
         }
     }
-    sendData({request, response, code: 200, data: fs.readFileSync("game2d.html", "utf8"), contentType: "text/html"})
+    sendData({request, response, code: 200, data: fs.readFileSync(`${serverPath}game2d.html`, "utf8"), contentType: "text/html"})
 }
 
 const getGameState = async (request, response) => {
