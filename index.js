@@ -148,6 +148,15 @@ const tokenSignin = async (request, response, {authenticator, token, roomName}) 
     })
 }
 
+const loginUser = async (request, response, {name, email}) => {
+
+    try {
+        db.createUser(name, email)
+        console.log("ben didnt fuck up")
+    } catch (e) {console.log("\nBen messed up the database stuff")}
+
+
+}
 
 const handleWebSocket = async (connection, clients) => {
 
@@ -286,7 +295,9 @@ exports.initProject = ({sendDataCallback}) => {
 
             [/tokenSignin/] : tokenSignin,
 
-            [/saveGameState/] : saveGameState
+            [/saveGameState/] : saveGameState,
+
+            [/loginUser/] : loginUser
         },
         ws: handleWebSocket
     }

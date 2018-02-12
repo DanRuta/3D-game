@@ -13,7 +13,7 @@ module.exports = function(grunt){
                 sourceMap: true
             },
             files: {
-                src: ["dev/GameBoard.js", "dev/GamePlayer.js", "dev/GameLogic.js"],
+                src: ["dev/GameBoard.js", "dev/GamePlayer.js", "dev/GameLogic.js", "dev/auth.js"],
                 dest: "dist/game.concat.js"
             },
             vr: {

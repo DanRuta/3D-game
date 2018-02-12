@@ -72,7 +72,7 @@ const error = (response, code, e) => {
 
 
 
-const game = require("./game.js").initProject({sendDataCallback: sendData, error})
+const game = require("./index.js").initProject({sendDataCallback: sendData, error})
 
 /*
     NOTE:
