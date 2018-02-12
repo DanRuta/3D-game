@@ -69,6 +69,9 @@
 
     })
     </script>
+    <script src="dev/auth.js"></script>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="511406985315-0at5rv65cdkq7r2vkivi9koa3l2vai05.apps.googleusercontent.com">
 </head>
 
 <body>
@@ -88,7 +91,7 @@
                     <!-- /.panel-content -->
                     <div class="panel-content bold">Sign in with Google to get started.</div>
                     <!-- /.panel-content bold -->
-                    <a id="playLink" href="javascript:void(0)" class="panel-button btn btn-primary">Sign in with google</a>
+                    <div id="playLink" href="javascript:void(0)" class="g-signin2" onclick="isLoggedIn()" data-onsuccess="onSignIn"></div>
                 </div>
                 <!-- /.panel -->
 
@@ -103,7 +106,7 @@
 
                 <!-- play -->
                 <div class="panel mb-5" id="play">
-                    <h2 class="panel-title">Welcome, username</h2>
+                    <h2 id="welcomeTitle" class="panel-title">Welcome</h2>
                     <!-- /.panel-title -->
                     <div class="panel-content">Select a game type:</div>
                     <!-- /.panel-content -->
@@ -243,7 +246,7 @@
 
 
 
-                <footer class="text-center mb-5"><a href="/">Logout</a> | <a class="privacyLinks" href="javascript:void(0)">Privacy Policy</a></footer>
+                <footer class="text-center mb-5"><a href="/" id="logoutText" class="d-none" onclick="signOut();">Logout</a><span id="logoutPipe" class="d-none"> | </span><a class="privacyLinks" href="javascript:void(0)">Privacy Policy</a></footer>
             </div>
             <!-- /.col-12 -->
         </div>
