@@ -1675,25 +1675,26 @@ window.addEventListener("load", () => {
         camera.updateProjectionMatrix()
     })
 
-    window.addEventListener("T^3Win", winnerWinnerChickenDinner)
-    window.addEventListener("T^3Tie", noChickenDinner)
+    window.addEventListener("T^3Win", displayWinner)
+    window.addEventListener("T^3Tie", displayTie)
 })
 
 
-function  winnerWinnerChickenDinner(e) {
+function displayWinner (e) {
     winPanel.style.display = "block"
     winPanel.style.textAlign = "center"
     winPanel.innerText = game.players[e.detail].name + " Winns!"
 
 }
-function  noChickenDinner(e) {
+
+function displayTie (e) {
     winPanel.style.display = "block"
     winPanel.style.textAlign = "center"
     winPanel.innerText = game.players[e.detail].name + " Caused a tie!"
-
 }
 
 function connectWebSockets(roomName) {
+
     ws =  new WebSocket("ws://vrscrible.localhost:8000/" + roomName)
 
     ws.addEventListener("message", (message) => {
@@ -1775,6 +1776,5 @@ function getGameState(roomName) {
             game.gameState  = data.gameState
         }
     })
-
 }
 //# sourceMappingURL=scriptVR.concat.js.map

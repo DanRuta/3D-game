@@ -1027,6 +1027,7 @@ class GameLogic {// eslint-disable-line
 typeof window!="undefined" && (window.exports = window.exports || {})
 typeof window!="undefined" && (window.GameLogic = GameLogic)
 exports.GameLogic = GameLogic
+"use strict"
 //Ben's JS
 
 async function signOut() {
@@ -1036,10 +1037,11 @@ async function signOut() {
 }
 
 async function onSignIn(googleUser) {
-    const profile = googleUser.getBasicProfile()
 
+    const profile = googleUser.getBasicProfile()
     const el = document.getElementById("welcomeTitle")
     el.textContent = "Welcome, " + profile.getName() + "!"
+
     fetch("./loginUser", {
         method: "post",
         headers: {
@@ -1047,7 +1049,7 @@ async function onSignIn(googleUser) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({name: profile.getName(), email: profile.getEmail()})
-    }).then(res=>res.json())
+    }).then(res => res.json())
     .catch(error => console.error("Error:", error))
     .then(res => console.log(res))
 }
@@ -1056,10 +1058,10 @@ function isLoggedIn() {
     const logoutText = document.getElementById("logoutText")
     const logoutPipe = document.getElementById("logoutPipe")
     const user = gapi.auth2.getAuthInstance().currentUser.get()
+
     if (user) {
         logoutText.classList.toggle("d-none")
         logoutPipe.classList.toggle("d-none")
-
     }
 }
 

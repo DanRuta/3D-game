@@ -126,7 +126,7 @@ const saveGameState = (request, response, {roomName, gameState}) => {
 }
 
 
-const tokenSignin = async (request, response, {authenticator, token, roomName}) => {
+const tokenSignin = async (request, response, {token, roomName}) => {
 
     let roomExists
 
@@ -149,13 +149,11 @@ const tokenSignin = async (request, response, {authenticator, token, roomName}) 
 }
 
 const loginUser = async (request, response, {name, email}) => {
-
     try {
         db.createUser(name, email)
-        console.log("ben didnt fuck up")
-    } catch (e) {console.log("\nBen messed up the database stuff")}
-
-
+    } catch (e) {
+        console.log("Error logging user in")
+    }
 }
 
 const handleWebSocket = async (connection, clients) => {
@@ -163,12 +161,10 @@ const handleWebSocket = async (connection, clients) => {
     websocketClients = clients
 
     try {
-
-
         connection.on("message", message => {
 
             message = JSON.parse(message)
-            // Save the room state else talk back
+
             if (message.type ==  "state"){
                 db.updateRoom(message.room, message.gameState)
 
@@ -245,7 +241,7 @@ const handleWebSocket = async (connection, clients) => {
 
 // Helper Functions
 // ================
-const authenticateUser = (token, authenticator, callback) => {
+const authenticateUser = (token, callback) => {
     fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`)
     .then(googleResponse => googleResponse.json())
     .then(({aud,name,sub,email,picture}) => {

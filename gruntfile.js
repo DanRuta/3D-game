@@ -5,7 +5,7 @@ module.exports = function(grunt){
             options: {
                 fix: true
             },
-            src: ["./dist/*concat.js", "*.js"]
+            src: ["dev/*.js", "./dist/*concat.js", "*.js"]
         },
 
         concat: {

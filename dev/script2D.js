@@ -358,18 +358,17 @@ function getGameState(roomName) {
             game.gameState  = data.gameState
         }
     })
-
 }
 
 function setPlayerLabels(){
     currentTurn.innerText =  game.players[game.playerIndex].name
-    const nextPlayer = game.playerIndex == game.players.length -  1 ? 0 : game.playerIndex + 1
+    const nextPlayer = game.playerIndex == game.players.length - 1 ? 0 : game.playerIndex + 1
     nextTurn.innerText = game.players[nextPlayer].name
 }
 
 function setupPlayersTags() {
     let htmlToPut = ""
-    game.players.forEach(player =>{
+    game.players.forEach(player => {
         htmlToPut += `
                               <!-- /.player -->
                                 <li class="player">
