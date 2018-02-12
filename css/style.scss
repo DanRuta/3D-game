@@ -69,6 +69,10 @@ main {
     }
 }
 
+.side-panel {
+    z-index: 10;
+}
+
 .panel, .side-panel {
     background-color: #fff;
     padding: 30px;
