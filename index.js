@@ -49,7 +49,7 @@ const getGameState = async (request, response) => {
     const roomName = params.query.roomName ? params.query.roomName : false
 
     const data = await db.getRoom(roomName)
-    const gameState = data.gameState? data.gameState : null
+    const gameState = data && data.gameState ? data.gameState : null
     const dataToSend = JSON.stringify({gameState: gameState})
 
     sendData({request, response, code: 200, data: dataToSend, contentType: "application/json"})
