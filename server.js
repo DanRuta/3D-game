@@ -15,7 +15,7 @@ const DEVMODE = process.argv.includes("dev")
 const getHandlers = []
 const postHandlers= []
 
-const PORTS = {http: 1338, https: 443, ws: 8001}
+const PORTS = {http: 1337, https: 443, ws: 8000}
 
 if (DEVMODE) {
     console.log("Dev mode")

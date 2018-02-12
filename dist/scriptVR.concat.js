@@ -1694,7 +1694,7 @@ function  noChickenDinner(e) {
 }
 
 function connectWebSockets(roomName) {
-    ws =  new WebSocket("ws://vrscrible.localhost:8001/" + roomName)
+    ws =  new WebSocket("ws://vrscrible.localhost:8000/" + roomName)
 
     ws.addEventListener("message", (message) => {
         const data = JSON.parse(message.data)
