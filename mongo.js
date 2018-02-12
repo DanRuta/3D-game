@@ -1,7 +1,7 @@
 "use strict"
 const url = "mongodb://localhost:27017/game"
-const MongoClient = require("mongodb").MongoClient
-const assert = require("assert")
+const {MongoClient} = require("mongodb")
+// const assert = require("assert")
 //
 //const Server = require('mongodb').Server
 //new Server("localhost", 27017)
@@ -103,7 +103,7 @@ module.exports.deleteAllQ = async () => {
 
 
 /** Room Stuff **/
-module.exports.getRooms = async() => {
+module.exports.getRooms = async () => {
 
     const db = await connectDB()
 
@@ -112,7 +112,7 @@ module.exports.getRooms = async() => {
     return result
 }
 
-module.exports.getRoom = async(id) => {
+module.exports.getRoom = async (id) => {
     const db = await connectDB()
     const room = db.collection("room")
     const result = await room.findOne({room: id})
@@ -120,7 +120,7 @@ module.exports.getRoom = async(id) => {
     return result
 }
 
-module.exports.createRoom = async(id) => {
+module.exports.createRoom = async (id) => {
     const db = await connectDB()
 
     const room = db.collection("room")
@@ -129,7 +129,7 @@ module.exports.createRoom = async(id) => {
     return result
 }
 
-module.exports.updateRoom = async(id, data) => {
+module.exports.updateRoom = async (id, data) => {
     const db = await connectDB()
 
     const room = db.collection("room")
@@ -142,7 +142,7 @@ module.exports.updateRoom = async(id, data) => {
 
 /** user Stuff **/
 
-module.exports.getUsers = async() => {
+module.exports.getUsers = async () => {
 
     const db = await connectDB()
 
@@ -151,7 +151,7 @@ module.exports.getUsers = async() => {
     return result
 }
 
-module.exports.getUser = async(id) => {
+module.exports.getUser = async (id) => {
 
     const db = await connectDB()
 
@@ -160,7 +160,7 @@ module.exports.getUser = async(id) => {
     return result
 }
 
-module.exports.createUser = async(data) => {
+module.exports.createUser = async (data) => {
     const db = await connectDB()
 
     const user = db.collection("user")

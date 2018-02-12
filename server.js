@@ -8,17 +8,12 @@ const url = require("url")
 const crypto = require("crypto")
 const mimes = require("mime-types")
 const zlib = require("zlib")
-const pug = require("pug")
 
 const WebSocket = require("ws").Server
 const DEVMODE = process.argv.includes("dev")
 
-const hostname =  DEVMODE ? "localhost" : "danruta"
-const ETags = {}
-
 const getHandlers = []
 const postHandlers= []
-const WebSocketHandlers = {}
 
 const PORTS = {http: 1338, https: 443, ws: 8001}
 
@@ -127,7 +122,6 @@ const [requestRoutes, requestRoutesArray] = compileHandlers(getHandlers, postHan
 
 const handleRequests = (request, response) => {
 
-    const subDomain = request.headers ? request.headers.host.split(hostname)[0].slice(0,-1) : ""
     let requestPath = url.parse(request.url).pathname
     let jsonData = ""
 
@@ -152,7 +146,6 @@ const handleRequests = (request, response) => {
                     requestPath = requestPath=="/" ? "/index.html" : requestPath+".html"
                 }
 
-                // const serverFilePath = `./${subDomain || "portfolio"}${requestPath}`,
                 const serverFilePath = `./${requestPath}`
                 const extension = requestPath.split(".").pop()
                 const contentType = mimes.contentType(extension)
@@ -210,9 +203,6 @@ wsServers.forEach(wss => {
 
     wss.on("connection", connection => {
 
-        // Get the subdomain that the connection originates from, for routing
-        const host = connection.upgradeReq.headers.origin
-        const subDomain = host.slice(host.indexOf("//")+2, host.indexOf("."))
         console.log("New WS connection")
 
         // Compile a list of clients from both the normal and secure WebSocket servers

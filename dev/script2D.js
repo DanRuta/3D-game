@@ -266,14 +266,14 @@ function  winnerWinnerChickenDinner(e) {
     turnPanel.style.display = "none"
     winPanel.style.display = "block"
     winPanel.innerText = game.players[e.detail].name + " Winns!"
-  
+
 }
 function  noChickenDinner(e) {
     turnPanel.classList.remove("d-flex")
     turnPanel.style.display = "none"
     winPanel.style.display = "block"
     winPanel.innerText = game.players[e.detail].name + " Caused a tie!"
-  
+
 }
 
 function connectWebSockets(roomName) {
@@ -362,7 +362,7 @@ function getGameState(roomName) {
 }
 
 function setPlayerLabels(){
-    currentTurn.innerText =  game.players[game.playerIndex].name 
+    currentTurn.innerText =  game.players[game.playerIndex].name
     const nextPlayer = game.playerIndex == game.players.length -  1 ? 0 : game.playerIndex + 1
     nextTurn.innerText = game.players[nextPlayer].name
 }

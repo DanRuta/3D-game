@@ -22,7 +22,7 @@ const index = (request, response) => {
     sendData({request, response, code: 200, data: fs.readFileSync("index.html", "utf8"), contentType: "text/html"})
 }
 
-const sendGame2D = async(request, response) => {
+const sendGame2D = async (request, response) => {
     const params = url.parse(request.url, true)
     const roomName = params.query.roomName ? params.query.roomName : false
 
@@ -30,13 +30,13 @@ const sendGame2D = async(request, response) => {
         const room = await db.getRoom(roomName)
 
         if (!room){
-            const result = await db.createRoom(roomName)
+            await db.createRoom(roomName)
         }
     }
     sendData({request, response, code: 200, data: fs.readFileSync("game2d.html", "utf8"), contentType: "text/html"})
 }
 
-const getGameState = async(request, response) => {
+const getGameState = async (request, response) => {
     const params = url.parse(request.url, true)
     const roomName = params.query.roomName ? params.query.roomName : false
 
@@ -93,14 +93,14 @@ const roomExists = (request, response, {roomName}) => {
     sendData({request, response, code: 200, data: JSON.stringify({roomExists: rooms.includes(roomName), roomName}), contentType: "text/plain"})
 }
 
-const createRoom = async(request, response, {roomName}) => {
+const createRoom = async (request, response, {roomName}) => {
 
     let responseData
 
     const roomExists = await db.getRoom(roomName)
 
     if (roomExists === []) {
-        const room = await db.createRoom(roomName)
+        await db.createRoom(roomName)
         responseData = roomName
     }
 
@@ -147,9 +147,9 @@ const handleWebSocket = async (connection, clients) => {
         connection.on("message", message => {
 
             message = JSON.parse(message)
-            //Save the room state else talk back
+            // Save the room state else talk back
             if (message.type ==  "state"){
-                const save = db.updateRoom(message.room, message.gameState)
+                db.updateRoom(message.room, message.gameState)
 
             } else  {
 

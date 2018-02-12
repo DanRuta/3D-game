@@ -5,7 +5,7 @@ module.exports = function(grunt){
             options: {
                 fix: true
             },
-            src: ["./dev/*.js", "*.js"]
+            src: ["./dist/*concat.js", "*.js"]
         },
 
         concat: {
@@ -41,10 +41,10 @@ module.exports = function(grunt){
         watch: {
             files: {
                 files: ["dev/*.js"],
-                tasks: ["eslint", "concat", "uglify"]
+                tasks: ["concat", "eslint", "uglify"]
             },
             serverside: {
-                files: ["game.js"],
+                files: ["*.js"],
                 tasks: ["eslint"]
             }
         }

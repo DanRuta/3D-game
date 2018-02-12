@@ -191,7 +191,7 @@ window.addEventListener("load", () => {
         setRotation(rotation)
     })
 
-    document.addEventListener("mousedown", event => {
+    document.addEventListener("mousedown", () => {
         game.board.mouseIsDown = true
     })
 
@@ -321,7 +321,7 @@ window.addEventListener("load", () => {
         if (++frameCounter%5==0) {
 
             bufferC.drawImage(video, 0, 0, video.width, video.height)
-            const data = bufferC.getImageData(0, 0, video.width, video.height).data
+            const {data} = bufferC.getImageData(0, 0, video.width, video.height)
 
             let avgX = 0
             let avgY = 0
@@ -383,7 +383,7 @@ window.addEventListener("load", () => {
         camera.aspect = window.innerWidth / window.innerHeight
         camera.updateProjectionMatrix()
     })
-  
+
     window.addEventListener("T^3Win", winnerWinnerChickenDinner)
     window.addEventListener("T^3Tie", noChickenDinner)
 })
@@ -393,13 +393,13 @@ function  winnerWinnerChickenDinner(e) {
     winPanel.style.display = "block"
     winPanel.style.textAlign = "center"
     winPanel.innerText = game.players[e.detail].name + " Winns!"
-  
+
 }
 function  noChickenDinner(e) {
     winPanel.style.display = "block"
     winPanel.style.textAlign = "center"
     winPanel.innerText = game.players[e.detail].name + " Caused a tie!"
-  
+
 }
 
 function connectWebSockets(roomName) {
