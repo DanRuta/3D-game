@@ -1,5 +1,5 @@
 "use strict"
-process.on(`uncaughtException`, console.error)
+process.on("uncaughtException", console.error)
 
 const fs = require("fs")
 const http = require("http")
@@ -63,7 +63,7 @@ const sendData = ({request, response, code=204, data, stream, contentType="text/
             }
         } else send()
 
-    }catch(e){console.log("Error sending data", e);console.trace()}
+    } catch (e){console.log("Error sending data", e);console.trace()}
 }
 
 const error = (response, code, e) => {
@@ -87,12 +87,12 @@ const game = require("./game.js").initProject({sendDataCallback: sendData, error
 */
 
 // Insert the project name into the start of each regex route
-for (let getRoute in game.get) {
+for (const getRoute in game.get) {
     game.get["/^\\/"+getRoute.slice(1,getRoute.length)] = game.get[getRoute]
     delete game.get[getRoute]
 }
 
-for (let postRoute in game.post) {
+for (const postRoute in game.post) {
     game.post["/^\\/"+postRoute.slice(1,postRoute.length)] = game.post[postRoute]
     delete game.post[postRoute]
 }
@@ -110,7 +110,7 @@ const compileHandlers = (getHandlers, postHandlers) => {
         POST: postHandlers.reduce((prev, curr) => Object.assign(prev, curr), {})
     }
 
-    for (let method in routes) {
+    for (const method in routes) {
         routesArray = routesArray.concat(Object.keys(routes[method]).map(regex => buildRegex(regex)))
     }
 
@@ -119,7 +119,7 @@ const compileHandlers = (getHandlers, postHandlers) => {
 
 const buildRegex = route => {
     const withoutDelimiters = route.slice(1, route.lastIndexOf("/")),
-    modifier = route.slice(route.lastIndexOf("/")+1)
+        modifier = route.slice(route.lastIndexOf("/")+1)
     return new RegExp(withoutDelimiters, modifier)
 }
 
@@ -141,7 +141,7 @@ const handleRequests = (request, response) => {
             jsonData = jsonData.length ? JSON.parse(jsonData) : jsonData
 
             // Search for a route to match the request to, and default to static requests on failure
-            const route = requestRoutesArray.filter(route => (requestPath).match(route))
+            const route = requestRoutesArray.filter(route => requestPath.match(route))
             const action = requestRoutes[request.method][route]
 
             if (action) {
@@ -174,7 +174,7 @@ const handleRequests = (request, response) => {
                 })
             }
 
-        } catch(e) {
+        } catch (e) {
             // catch no request data error
             error(response, 500, e)
         }

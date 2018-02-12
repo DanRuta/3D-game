@@ -1,10 +1,11 @@
+"use strict"
 module.exports = function(grunt){
     grunt.initConfig({
         eslint: {
             options: {
-              fix: true
+                fix: true
             },
-            src: ["./dev/*.js", "game.js"]
+            src: ["./dev/*.js", "*.js"]
         },
 
         concat: {
@@ -25,9 +26,9 @@ module.exports = function(grunt){
             my_target: {
                 options: {
                     sourceMap: {
-                        includeSources: true,
+                        includeSources: true
                     },
-                    mangle: false,
+                    mangle: false
                 },
                 files: {
                     "dist/game.min.js" : ["dist/game.concat.js"],
@@ -46,7 +47,7 @@ module.exports = function(grunt){
                 files: ["game.js"],
                 tasks: ["eslint"]
             }
-        },
+        }
     })
 
     grunt.loadNpmTasks("grunt-contrib-watch")

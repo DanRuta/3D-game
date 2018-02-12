@@ -39,11 +39,11 @@ const sendGame2D = async(request, response) => {
 const getGameState = async(request, response) => {
     const params = url.parse(request.url, true)
     const roomName = params.query.roomName ? params.query.roomName : false
-  
+
     const data = await db.getRoom(roomName)
     const gameState = data.gameState? data.gameState : null
     const dataToSend = JSON.stringify({gameState: gameState})
-    
+
     sendData({request, response, code: 200, data: dataToSend, contentType: "application/json"})
 }
 
@@ -62,7 +62,7 @@ const getAIMove = async (request, response, {gameState}) => {
         qs = qs[0]
 
         // No knowledge of this state. Set to 1 and make a random move
-        if (qs===undefined) { 
+        if (qs===undefined) {
 
             console.log("dunno lol")
             // TODO, set the db value to 1
@@ -142,17 +142,17 @@ const handleWebSocket = async (connection, clients) => {
     websocketClients = clients
 
     try {
-        
-      
+
+
         connection.on("message", message => {
 
             message = JSON.parse(message)
             //Save the room state else talk back
             if (message.type ==  "state"){
                 const save = db.updateRoom(message.room, message.gameState)
-              
+
             } else  {
-              
+
                 // Register the user data to the connection
                 if (!connection.meta) {
                     connection.meta = {
@@ -169,7 +169,7 @@ const handleWebSocket = async (connection, clients) => {
                     }
                 })
             }
-          
+
         })
 
         connection.on("close", () => {

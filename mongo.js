@@ -1,7 +1,7 @@
 "use strict"
-const url = 'mongodb://localhost:27017/game'
-const MongoClient = require('mongodb').MongoClient
-const assert = require('assert')
+const url = "mongodb://localhost:27017/game"
+const MongoClient = require("mongodb").MongoClient
+const assert = require("assert")
 //
 //const Server = require('mongodb').Server
 //new Server("localhost", 27017)
@@ -11,16 +11,16 @@ const connectDB = testing => {
     return new Promise((resolve, reject) => {
         MongoClient.connect(url, (err, db) => {
 
-            if(err){
+            if (err){
                 console.log("resolving")
                 reject(err.message)
             }
 
-            if(testing){
+            if (testing){
                 console.log("connected to db")
                 db.close()
                 resolve({message: "Conencted to db"})
-            }else
+            } else
                 resolve(db)
         })
     })
@@ -28,27 +28,27 @@ const connectDB = testing => {
 
 /** AI Stuff **/
 module.exports.countQ = async () => {
-  const db = await connectDB()
+    const db = await connectDB()
 
-  const q = db.collection("q")
-  const result = await q.count({})
-  return result
+    const q = db.collection("q")
+    const result = await q.count({})
+    return result
 }
 module.exports.getQ = async (key) => {
-  const db = await connectDB()
+    const db = await connectDB()
 
-  const q = db.collection("q")
-  // const result = await q.find({key}, {value: 1, _id: 0}).toArray()
-  const result = await q.find({key}, {_id: 0}).toArray()
-  return result
+    const q = db.collection("q")
+    // const result = await q.find({key}, {value: 1, _id: 0}).toArray()
+    const result = await q.find({key}, {_id: 0}).toArray()
+    return result
 }
 
 module.exports.batchGetQ = async (keys) => {
-  const db = await connectDB()
+    const db = await connectDB()
 
-  const q = db.collection("q")
-  const result = await q.find({key: {$in: keys}}, {_id: 0}).toArray()
-  return result
+    const q = db.collection("q")
+    const result = await q.find({key: {$in: keys}}, {_id: 0}).toArray()
+    return result
 }
 
 // module.exports.setQ = async (key, value) => {
@@ -68,28 +68,28 @@ module.exports.batchGetQ = async (keys) => {
 // }
 
 module.exports.setManyQ = async (records) => {
-  const db = await connectDB()
+    const db = await connectDB()
 
-  const q = db.collection("q")
-  const result = await q.insertMany(records)
-  return result
+    const q = db.collection("q")
+    const result = await q.insertMany(records)
+    return result
 }
 
 // careful with this (millions of records)
 module.exports.getAllQ = async () => {
-  const db = await connectDB()
+    const db = await connectDB()
 
-  const q = db.collection("q")
-  const result = await q.find({}).toArray()
-  return result
+    const q = db.collection("q")
+    const result = await q.find({}).toArray()
+    return result
 }
 
 module.exports.deleteAllQ = async () => {
-  const db = await connectDB()
+    const db = await connectDB()
 
-  const q = db.collection("q")
-  const result = q.deleteMany({})
-  return result
+    const q = db.collection("q")
+    const result = q.deleteMany({})
+    return result
 }
 
 // module.exports.updateQ = async (key, value) => {
@@ -105,69 +105,69 @@ module.exports.deleteAllQ = async () => {
 /** Room Stuff **/
 module.exports.getRooms = async() => {
 
-  const db = await connectDB()
+    const db = await connectDB()
 
-  const room = db.collection("room")
-  let result = await room.find({}).toArray()
-  return result
-};
+    const room = db.collection("room")
+    const result = await room.find({}).toArray()
+    return result
+}
 
 module.exports.getRoom = async(id) => {
-  const db = await connectDB()
-  const room = db.collection("room")
-  let result = await room.findOne({room: id})
+    const db = await connectDB()
+    const room = db.collection("room")
+    const result = await room.findOne({room: id})
 
-  return result
-};
+    return result
+}
 
 module.exports.createRoom = async(id) => {
-  const db = await connectDB()
+    const db = await connectDB()
 
-  const room = db.collection("room")
-  let result = await room.insert({room: id, gameState: ""})
+    const room = db.collection("room")
+    const result = await room.insert({room: id, gameState: ""})
 
-  return result
-};
+    return result
+}
 
 module.exports.updateRoom = async(id, data) => {
-  const db = await connectDB()
+    const db = await connectDB()
 
-  const room = db.collection("room")
-  let result = await room.updateOne({room: id}, {$set:  {gameState: data}})
-//  lessonCollection.updateOne({"_id": data._id}, data);
+    const room = db.collection("room")
+    const result = await room.updateOne({room: id}, {$set:  {gameState: data}})
+    //  lessonCollection.updateOne({"_id": data._id}, data);
 
-  return result
-};
+    return result
+}
 /** end room Stuff **/
 
 /** user Stuff **/
 
 module.exports.getUsers = async() => {
 
-  const db = await connectDB()
+    const db = await connectDB()
 
-  let user = db.collection("user")
-  let result = await user.find({}).toArray()
-  return result
-};
+    const user = db.collection("user")
+    const result = await user.find({}).toArray()
+    return result
+}
 
 module.exports.getUser = async(id) => {
 
-  const db = await connectDB()
+    const db = await connectDB()
 
-  let user = db.collection("user")
-  let result = await user.find({}).toArray()
-  return result
-};
+    const user = db.collection("user")
+    const result = await user.find({}).toArray()
+    return result
+}
 
 module.exports.createUser = async(data) => {
-  const db = await connectDB()
+    const db = await connectDB()
 
-  const user = db.collection("user")
-  let result = await user.insert([data])
+    const user = db.collection("user")
+    const result = await user.insert([data])
 
-  return result
-};
+    return result
+}
 
 
 /** end user Stuff **/
