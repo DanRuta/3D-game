@@ -189,13 +189,33 @@
                     <div class="panel-content">Please select a room to join</div>
 
                     <form action="/game">
-                        <div class="form-group row">
-                            <label for="roomName" class="col-sm-6 col-form-label">Room Name</label>
-                            <div class="col-sm-6">
-                                <input type="text" class="form-control" name="roomName" id="roomName" placeholder="room name">
+                        <form action="/game">
+                            <div class="form-group row">
+                                <label for="roomName" class="col-sm-6 col-form-label">Room Name</label>
+                                <div class="col-sm-6">
+                                    <input type="text" class="form-control" name="roomName" id="roomName" placeholder="room name">
+                                </div>
                             </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary mt-2">Play T^3</button>
+                            <div class="form-group row">
+                                <label for="useVR" class="col-sm-6 col-form-label">Use VR</label>
+                                <div class="col-sm-6">
+                                    <select class="form-control" id="useVR" name="useVR" onchange="vrType.disabled = false;">
+                                        <option value="no">No</option>
+                                        <option value="yes">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="vrType" class="col-sm-6 col-form-label">VR Controller OR Viewer?</label>
+                                <div class="col-sm-6">
+                                    <select class="form-control" id="vrType" name="vrType" disabled>
+                                        <option value="controller">Controller</option>
+                                        <option value="viewer">Viewer</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-2">Play T^3</button>
+                      </form>
                   </form>
                 </div>
                 <!-- /.panel -->
