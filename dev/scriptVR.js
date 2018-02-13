@@ -2,7 +2,6 @@
 
 let ws
 let roomNameValue
-
 let rotation = 45
 
 const rotations = [
@@ -109,26 +108,34 @@ window.addEventListener("load", () => {
 
     // Controls
     let controls = new THREE.OrbitControls(camera, renderer.domElement)
-    controls.target.set(
-        Math.cos(camera.position.x*Math.PI/180) * 4,
-        camera.position.y,
-        Math.sin(camera.position.z*Math.PI/180) * 4
-    )
-    controls.enablePan = false
-    controls.enableZoom = false
+    // controls.target.set(
+    //     Math.cos(camera.position.x*Math.PI/180) * 4,
+    //     camera.position.y,
+    //     Math.sin(camera.position.z*Math.PI/180) * 4
+    // )
+    controls.target.set(camera.position.x+0.15, camera.position.y, camera.position.z)
+    // controls.enablePan = false
+    // controls.enableZoom = false
+    controls.noPan  = true
+    controls.noZoom = true
+
 
     // Set VR controls if available
-    const setOrientationControls = event => {
-
-        if (!event.alpha) return
-
+    if (navigator.userAgent.toLowerCase().includes("mobile")) {
         controls = new THREE.VRControls(camera)
         controls.update()
+    } else {
+        const setOrientationControls = event => {
 
-        window.removeEventListener("deviceorientation", setOrientationControls)
+            if (!event.alpha) return
+
+            controls = new THREE.VRControls(camera)
+            controls.update()
+
+            window.removeEventListener("deviceorientation", setOrientationControls)
+        }
+        window.addEventListener("deviceorientation", setOrientationControls)
     }
-    window.addEventListener("deviceorientation", setOrientationControls)
-
 
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
@@ -175,8 +182,8 @@ window.addEventListener("load", () => {
         raycaster.setFromCamera(mouse, camera)
 
         effect.render(scene, camera)
-
     }
+
     render()
 
 
@@ -279,7 +286,6 @@ window.addEventListener("load", () => {
     video.autoplay = true
     video.width = window.innerWidth
     video.height = window.innerHeight / 2
-    getVideoFeed()
 
     const buffer = document.createElement("canvas")
     buffer.width = video.width
@@ -373,7 +379,8 @@ window.addEventListener("load", () => {
     }
 
     // TEMP
-    if (getParameters().t == "y") {
+    if (getParameters().t != "n") {
+        getVideoFeed()
         readCircle()
     }
 
@@ -392,8 +399,7 @@ window.addEventListener("load", () => {
 function displayWinner (e) {
     winPanel.style.display = "block"
     winPanel.style.textAlign = "center"
-    winPanel.innerText = game.players[e.detail].name + " Winns!"
-
+    winPanel.innerText = game.players[e.detail].name + " Wins!"
 }
 
 function displayTie (e) {
@@ -404,11 +410,17 @@ function displayTie (e) {
 
 function connectWebSockets(roomName) {
 
-    ws =  new WebSocket("ws://vrscrible.localhost:8000/" + roomName)
+    let wsPath = `ws://${window.location.hostname}:8000/${roomName}`
+
+    // Upgrade to secure connection
+    if (window.location.protocol.includes("https")) {
+        wsPath = `wss://${window.location.hostname}:443/${roomName}`
+    }
+
+    ws = new WebSocket(wsPath)
 
     ws.addEventListener("message", (message) => {
         const data = JSON.parse(message.data)
-        console.log(data)
 
         if (data.type === "gravity") {
             game.shiftGravity(data.direction)
@@ -417,16 +429,12 @@ function connectWebSockets(roomName) {
 
             const player = data.playerIndex
             const {b, r, c} = data
-            console.log(player, b, r, c)
             game.makeMove(player, b, r, c)
         }
     })
 
     ws.addEventListener("open", () => {
-        console.log("connect ws")
-        console.log(roomName)
         ws.send(JSON.stringify({userId: "1234", username: "rob", type: "setUp", room: roomName }))
-
         getGameState(roomName)
     })
 }
@@ -450,7 +458,6 @@ function sendMove(playerIndex, b, r, c, gameState) {
             gameState: gameState
         }))
     }
-    //setPlayerLabels()
 }
 
 function sendState(gameState) {

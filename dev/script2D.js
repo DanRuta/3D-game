@@ -277,7 +277,15 @@ function  noChickenDinner(e) {
 }
 
 function connectWebSockets(roomName) {
-    ws =  new WebSocket("ws://vrscrible.localhost:8000/" + roomName)
+
+    let wsPath = `ws://${window.location.hostname}:8000/${roomName}`
+
+    // Upgrade to secure connection
+    if (window.location.protocol.includes("https")) {
+        wsPath = `wss://${window.location.hostname}:443/${roomName}`
+    }
+
+    ws = new WebSocket(wsPath)
 
     ws.addEventListener("message", (message) => {
         const data = JSON.parse(message.data)

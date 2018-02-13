@@ -165,7 +165,7 @@ const handleWebSocket = async (connection, clients) => {
 
             message = JSON.parse(message)
 
-            if (message.type ==  "state"){
+            if (message.type == "state"){
                 db.updateRoom(message.room, message.gameState)
 
             } else  {
