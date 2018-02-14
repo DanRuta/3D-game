@@ -68,6 +68,21 @@
         document.querySelectorAll(".panel-back").forEach(a => a.addEventListener("click", goBack))
 
     })
+
+    function enableVR()
+    {
+        vrType.disabled = false;
+        vrForm.action = "/controller.html"
+    }
+
+    function setAction(sel)
+    {
+        if (sel.value == 'controller') {
+            vrForm.action = "/controller.html"
+        } else if (sel.value == 'viewer') {
+            vrForm.action = "/gameVR.html"
+        }
+    }
     </script>
     <script src="dev/auth.js"></script>
     <script src="https://apis.google.com/js/platform.js" async defer></script>
@@ -188,7 +203,7 @@
 
                     <div class="panel-content">Please select a room to join</div>
 
-                    <form action="/game">
+                    <form id="vrForm" action="/game">
                         <form action="/game">
                             <div class="form-group row">
                                 <label for="roomName" class="col-sm-6 col-form-label">Room Name</label>
@@ -199,7 +214,7 @@
                             <div class="form-group row">
                                 <label for="useVR" class="col-sm-6 col-form-label">Use VR</label>
                                 <div class="col-sm-6">
-                                    <select class="form-control" id="useVR" name="useVR" onchange="vrType.disabled = false;">
+                                    <select class="form-control" id="useVR" name="useVR" onchange="enableVR()">
                                         <option value="no">No</option>
                                         <option value="yes">Yes</option>
                                     </select>
@@ -208,7 +223,7 @@
                             <div class="form-group row">
                                 <label for="vrType" class="col-sm-6 col-form-label">VR Controller OR Viewer?</label>
                                 <div class="col-sm-6">
-                                    <select class="form-control" id="vrType" name="vrType" disabled>
+                                    <select class="form-control" id="vrType" name="vrType" disabled onchange="setAction(this)">
                                         <option value="controller">Controller</option>
                                         <option value="viewer">Viewer</option>
                                     </select>
