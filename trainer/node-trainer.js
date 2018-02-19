@@ -6,7 +6,7 @@ const fs = require("fs")
 const args = process.argv.slice(2, 12)
 const {GameLogic} = require("./GameLogic.js")
 const {GamePlayer} = require("./GamePlayer.js")
-const db = require("../game-MongoDB")
+const db = require("../mongo.js")
 
 let deleteData = false
 let doTraining = true

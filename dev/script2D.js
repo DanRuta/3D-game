@@ -30,15 +30,15 @@ window.addEventListener("load", () => {
     resetButton.addEventListener("click", () => {
         content.innerHTML = ""
 
-        const {g, span, p} = getParameters()
+        const {g, span, p, ai} = getParameters()
 
         window.game = new GameLogic({
             gravityEnabled: !g || g=="1",
             gameBoard: GameBoard,
             span: parseInt(span) || 3,
-            players: parseInt(p) || 2
+            players: parseInt(p) || 2,
             // isTraining: false,
-            // aiOpponent: aiOpponentCheckbox.checked,
+            aiOpponent: ai=="true"
             // isMultiplayer: false
         })
         content.appendChild(game.board.boardElement)

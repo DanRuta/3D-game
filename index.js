@@ -285,14 +285,10 @@ exports.initProject = ({sendDataCallback}) => {
         post: {
             [/getAIMove/] : getAIMove,
             [/rewardAI/] : rewardAI,
-
             [/roomExists/] : roomExists,
             [/createRoom/] : createRoom,
-
             [/tokenSignin/] : tokenSignin,
-
             [/saveGameState/] : saveGameState,
-
             [/loginUser/] : loginUser
         },
         ws: handleWebSocket
